@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 export default function ScanPage() {
   return (
     <AppLayoutController>
-       <div className="flex flex-col items-center justify-center min-h-full p-4 md:p-8 animate-in fade-in-0 duration-500">
+       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] p-4 md:p-8 animate-in fade-in-0 duration-500">
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl">Scan a Product</CardTitle>

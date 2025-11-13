@@ -90,9 +90,9 @@ export default function ScanUploader() {
           reasoning: assessment.reasoning,
           warnings: [], // The AI response could be parsed to fill this
         },
-        alternatives: [ // The AI response could be parsed to fill this
-            { name: "Alternative Product", reason: assessment.alternativeSuggestions}
-        ],
+        alternatives: assessment.alternativeSuggestions ? [
+            { name: "Alternative Suggestion", reason: assessment.alternativeSuggestions }
+        ] : [],
       };
 
       const docRef = await addDocumentNonBlocking(scanHistoryRef, newScan);
