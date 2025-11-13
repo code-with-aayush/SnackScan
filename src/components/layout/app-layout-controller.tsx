@@ -14,6 +14,7 @@ import ProfileSetupPage from '@/app/profile/setup/page';
 function AppShell({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading, firestore } = useFirebase();
   const router = useRouter();
+  const pathname = usePathname();
 
   const profileRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -29,10 +30,13 @@ function AppShell({ children }: { children: React.ReactNode }) {
       router.replace('/login');
     } else if (!isUserLoading && user && !isProfileLoading) {
        setInitialLoad(false);
+       if (!userProfile?.name && pathname !== '/profile/setup') {
+         router.replace('/profile/setup');
+       }
     }
-  }, [user, isUserLoading, router, isProfileLoading, userProfile]);
+  }, [user, isUserLoading, router, isProfileLoading, userProfile, pathname]);
 
-  if (initialLoad || isUserLoading || isProfileLoading) {
+  if (initialLoad || isUserLoading || (user && isProfileLoading)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -46,10 +50,10 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full bg-secondary/30">
       <div className="md:pl-16 lg:pl-60">
         <Header />
-        <main className="bg-background">
+        <main className="bg-background md:m-4 md:rounded-lg md:border md:shadow-sm">
           {children}
         </main>
       </div>
@@ -65,7 +69,7 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         if (!isUserLoading && user) {
-            router.replace('/');
+            router.replace('/dashboard');
         }
     }, [user, isUserLoading, router]);
 

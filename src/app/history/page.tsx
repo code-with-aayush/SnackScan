@@ -2,10 +2,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import AppLayoutController from '@/components/layout/app-layout-controller';
 import type { ScanResult } from '@/lib/types';
@@ -14,7 +11,7 @@ import { collection, doc, deleteDoc } from 'firebase/firestore';
 import { Loader2, Search, AlertTriangle, ShieldCheck, ShieldAlert, CircleAlert, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
+import { buttonVariants } from '@/components/ui/button';
 
 
 const verdictConfig = {
@@ -51,42 +49,31 @@ function ScanHistoryCard({ scan, onDelete, onView }: { scan: ScanResult, onDelet
   const currentVerdict = verdictConfig[scan.verdict] || verdictConfig['Moderate'];
   
   return (
-      <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1 relative group">
+      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50 relative group">
         <div className="p-4 cursor-pointer" onClick={() => onView(scan)}>
           <div className="flex justify-between items-start mb-2">
              <div className="flex-grow">
-                <div className="flex items-center gap-2">
-                <currentVerdict.icon className={cn("size-5", currentVerdict.style.split(' ')[1])} />
-                <h3 className="font-semibold text-lg">{scan.productName}</h3>
+                <div className="flex items-center gap-3">
+                <currentVerdict.icon className={cn("size-6", currentVerdict.style.split(' ')[1])} />
+                <div className='flex flex-col'>
+                  <h3 className="font-semibold text-lg leading-tight">{scan.productName}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(scan.scanDate).toLocaleDateString()}
+                  </p>
+                </div>
                 </div>
             </div>
             <div className="text-right flex-shrink-0 ml-4">
                <Badge className={cn("text-xs", currentVerdict.style)}>
                   {currentVerdict.label}
                 </Badge>
-              <p className="text-xs text-muted-foreground mt-1">
-                {new Date(scan.scanDate).toLocaleDateString()} {new Date(scan.scanDate).toLocaleTimeString()}
-              </p>
             </div>
           </div>
           
-          <div className='pl-7'>
-            <p className="text-sm font-medium">Safety Analysis:</p>
-            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+          <div className='pl-9 mt-2'>
+            <p className="text-sm text-muted-foreground line-clamp-2">
                 {scan.analysis.reasoning}
             </p>
-
-            {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
-                <div>
-                    <p className="text-sm font-medium">Recommendations:</p>
-                    <div className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-500">
-                        <AlertTriangle className="size-4 mt-0.5 flex-shrink-0" />
-                        <p className='line-clamp-2'>
-                        DO NOT CONSUME - This product contains allergens that could cause a serious allergic reaction. Look for alternatives without these allergens.
-                        </p>
-                    </div>
-                </div>
-            )}
           </div>
         </div>
 
@@ -113,13 +100,6 @@ function ScanHistoryCard({ scan, onDelete, onView }: { scan: ScanResult, onDelet
       </Card>
   );
 }
-
-const StatCard = ({ label, value, colorClass }: { label: string; value: number; colorClass?: string }) => (
-    <div className="text-center">
-      <p className={cn("text-3xl font-bold", colorClass)}>{value}</p>
-      <p className="text-sm text-muted-foreground">{label}</p>
-    </div>
-);
 
 export default function HistoryPage() {
   const { firestore, user } = useFirebase();
@@ -165,37 +145,16 @@ export default function HistoryPage() {
       scan =>
         scan.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         scan.ingredients?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ).sort((a,b) => new Date(b.scanDate).getTime() - new Date(a.scanDate).getTime());
   }, [scanHistory, searchTerm]);
   
-  const stats = useMemo(() => {
-    if (!scanHistory) return { total: 0, safe: 0, moderate: 0, notSafe: 0 };
-    return {
-      total: scanHistory.length,
-      safe: scanHistory.filter(s => s.verdict === 'Safe').length,
-      moderate: scanHistory.filter(s => s.verdict === 'Moderate').length,
-      notSafe: scanHistory.filter(s => s.verdict === 'Not Safe').length,
-    };
-  }, [scanHistory]);
 
   return (
     <AppLayoutController>
-      <div className="animate-in fade-in-0 duration-500 bg-secondary/20 min-h-[calc(100vh-56px)]">
-         <div className="bg-primary text-primary-foreground p-8">
-            <h1 className="text-3xl font-bold tracking-tight">Scan History</h1>
-            <p className="text-primary-foreground/80 mt-1">Track all your food safety scans</p>
-        </div>
-
-        <div className="bg-background p-6 shadow-md">
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard label="Total Scans" value={stats.total} />
-                <StatCard label="Safe Products" value={stats.safe} colorClass="text-primary" />
-                <StatCard label="Moderate Risk" value={stats.moderate} colorClass="text-accent" />
-                <StatCard label="Not Safe" value={stats.notSafe} colorClass="text-destructive" />
-            </div>
-        </div>
-
-        <div className="p-4 md:p-8">
+      <div className="p-4 md:p-8 animate-in fade-in-0 duration-500 min-h-[calc(100vh-56px)] md:min-h-0">
+          <h1 className="text-3xl font-bold tracking-tight mb-4">Scan History</h1>
+          <p className="text-muted-foreground mb-8">Track and search all your food safety scans.</p>
+        
           <div className="relative mb-8">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
@@ -222,18 +181,22 @@ export default function HistoryPage() {
           )}
 
           {!isLoading && (!filteredHistory || filteredHistory.length === 0) && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                {scanHistory && scanHistory.length > 0 ? 'No results found for your search.' : "You haven't scanned any products yet."}
+            <div className="text-center py-12 bg-secondary/50 rounded-lg">
+               <p className="font-semibold">
+                {scanHistory && scanHistory.length > 0 ? 'No matching scans found' : "No Scans Yet"}
+              </p>
+              <p className="text-muted-foreground text-sm mt-1">
+                {scanHistory && scanHistory.length > 0 ? 'Try searching for something else.' : "Your past scans will appear here."}
               </p>
                {(!scanHistory || scanHistory.length === 0) && (
-                 <Link href="/" className="text-primary hover:underline mt-2 inline-block">
-                    Start scanning
-                  </Link>
+                 <Button asChild className="mt-4">
+                    <Link href="/">
+                        Start scanning
+                    </Link>
+                 </Button>
                )}
             </div>
           )}
-        </div>
       </div>
     </AppLayoutController>
   );

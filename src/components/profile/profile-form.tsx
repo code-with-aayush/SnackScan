@@ -22,9 +22,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/lib/types';
-import { useEffect } from 'react';
-import { setDocumentNonBlocking } from '@/firebase';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 const dietaryPreferences = [
   { id: 'vegan', label: 'Vegan' },
@@ -46,6 +46,7 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
   const { user, isUserLoading, auth, firestore } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
 
 
   const profileRef = useMemoFirebase(() => {
@@ -99,6 +100,8 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
       return;
     }
     
+    setIsSaving(true);
+    
     const profileData: UserProfile = {
       id: user.uid,
       email: user.email || '',
@@ -108,15 +111,24 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
       dietaryPreferences: data.dietaryPreferences || [],
     };
 
-    setDocumentNonBlocking(profileRef, profileData, { merge: true });
+    try {
+        await setDoc(profileRef, profileData, { merge: true });
+        toast({
+          title: 'Profile Saved',
+          description: isOnboarding ? 'Welcome! You can now start scanning.' : 'Your health profile has been updated.',
+        });
 
-    toast({
-      title: 'Profile Updated',
-      description: 'Your health profile has been saved successfully.',
-    });
-
-    if (isOnboarding) {
-      router.push('/');
+        if (isOnboarding) {
+          router.push('/dashboard');
+        }
+    } catch(e: any) {
+         toast({
+            variant: 'destructive',
+            title: 'Uh oh! Something went wrong.',
+            description: e.message || "Could not save your profile.",
+        });
+    } finally {
+        setIsSaving(false);
     }
   }
 
@@ -160,7 +172,7 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
           name="healthConditions"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Health Conditions</FormLabel>
+              <FormLabel>Health Conditions</FormLabel>              
               <FormControl>
                 <Textarea
                   placeholder="e.g., Diabetes, High Blood Pressure"
@@ -226,7 +238,10 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
         />
 
         <div className="flex flex-wrap gap-4 pt-4">
-          <Button type="submit">Save Changes</Button>
+           <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isOnboarding ? 'Continue' : 'Save Changes'}
+          </Button>
           {!isOnboarding && (
             <Button
               type="button"

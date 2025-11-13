@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { LogOut, User, ScanLine, History, Menu } from 'lucide-react';
+import { LogOut, User, ScanLine, History, Menu, LayoutDashboard } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { signOut as firebaseSignOut } from 'firebase/auth';
 
@@ -20,10 +20,12 @@ import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Link from 'next/link';
 
 const pageTitles: { [key: string]: string } = {
+  '/dashboard': 'Dashboard',
   '/': 'Scan Product',
   '/history': 'Scan History',
   '/scan': 'Scan Product',
   '/profile': 'Profile',
+  '/result': 'Scan Result',
 };
 
 export default function Header() {
@@ -45,16 +47,23 @@ export default function Header() {
     return names[0].substring(0, 2);
   };
 
-  const title = pageTitles[pathname] || 'SnackScan';
+  const findTitle = (path: string) => {
+    if (pageTitles[path]) return pageTitles[path];
+    if (path.startsWith('/scan/')) return "Scan Details";
+    return 'SnackScan';
+  }
+
+  const title = findTitle(pathname);
   
   const navItems = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/', icon: ScanLine, label: 'Scan' },
     { href: '/history', icon: History, label: 'History' },
     { href: '/profile', icon: User, label: 'Profile' },
   ];
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card/80 backdrop-blur-sm px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card/80 backdrop-blur-sm px-4 md:hidden">
        <div className="md:hidden">
         <Sheet>
           <SheetTrigger asChild>
@@ -103,6 +112,12 @@ export default function Header() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+           <DropdownMenuItem asChild className='cursor-pointer'>
+             <Link href="/profile">
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+             </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={signOut}
             disabled={isUserLoading}

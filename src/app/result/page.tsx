@@ -2,14 +2,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, CircleAlert } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, CircleAlert, Leaf } from 'lucide-react';
 import AppLayoutController from '@/components/layout/app-layout-controller';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { ScanResult } from '@/lib/types';
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 const verdictConfig = {
   'Safe': {
@@ -36,6 +37,20 @@ const NutritionItem = ({ label, value }: { label: string, value?: string }) => {
   );
 };
 
+const AlternativeItem = ({ name, reason }: { name: string; reason: string }) => (
+    <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
+        <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-full">
+                <Leaf className="size-5 text-primary" />
+            </div>
+            <div>
+                <h4 className="font-semibold">{name}</h4>
+                <p className="text-sm text-muted-foreground">{reason}</p>
+            </div>
+        </div>
+    </div>
+)
+
 export default function ResultPage() {
   const router = useRouter();
   const [scan, setScan] = useState<ScanResult | null>(null);
@@ -61,7 +76,7 @@ export default function ResultPage() {
   if (isLoading) {
     return (
        <AppLayoutController>
-          <div className="flex h-[80vh] w-full items-center justify-center">
+          <div className="flex h-[calc(100vh-56px)] md:h-auto md:min-h-[500px] w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
        </AppLayoutController>
@@ -71,7 +86,7 @@ export default function ResultPage() {
   if (!scan) {
     return (
       <AppLayoutController>
-         <div className="flex h-[80vh] w-full items-center justify-center flex-col gap-4">
+         <div className="flex h-[calc(100vh-56px)] md:h-auto md:min-h-[500px] w-full items-center justify-center flex-col gap-4">
            <p className="text-muted-foreground">No scan result found.</p>
            <Button onClick={() => router.push('/')}>Start a New Scan</Button>
          </div>
@@ -84,7 +99,7 @@ export default function ResultPage() {
   return (
     <AppLayoutController>
       <div className="p-4 md:p-6 animate-in fade-in-0 duration-500 max-w-3xl mx-auto">
-        <Button asChild variant="ghost" className="mb-4 text-muted-foreground">
+        <Button asChild variant="ghost" className="mb-4 -ml-4 text-muted-foreground">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Scan Another Product
@@ -94,25 +109,29 @@ export default function ResultPage() {
         <Card className="w-full">
             <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
-                    <currentVerdict.icon className={cn("size-10 mb-3", verdictConfig[scan.verdict].style.split(' ')[1])} />
-                    <h1 className="text-2xl font-bold">{scan.productName}</h1>
+                    <div className={cn("size-16 mb-4 rounded-full flex items-center justify-center", currentVerdict.style)}>
+                        <currentVerdict.icon className={cn("size-8", currentVerdict.style.split(' ')[1])} />
+                    </div>
                     <Badge className={cn("mt-2 text-sm px-3 py-1", currentVerdict.style)}>
                         {scan.verdict}
                     </Badge>
+                    <h1 className="text-3xl font-bold mt-2">{scan.productName}</h1>
                 </div>
                 
-                <div className="mt-6 space-y-5">
+                <div className="mt-8 space-y-6">
                     <div>
-                        <h2 className="font-semibold mb-2">Safety Analysis</h2>
+                        <h2 className="font-semibold text-lg mb-2">Safety Analysis</h2>
                         <p className="text-sm text-muted-foreground">{scan.analysis.reasoning}</p>
                     </div>
 
+                    <Separator />
+
                     {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
                         <div>
-                            <h3 className="font-semibold text-destructive mb-2 flex items-center gap-2"><AlertTriangle className="size-4" /> Critical Issues</h3>
-                            <ul className="list-disc pl-5 space-y-1 text-sm">
+                            <h3 className="font-semibold text-lg text-destructive mb-3 flex items-center gap-2"><AlertTriangle className="size-5" /> Critical Issues</h3>
+                            <ul className="list-disc pl-5 space-y-2 text-sm">
                                 {scan.analysis.warnings.map((warning, index) => (
-                                    <li key={index} className="text-destructive">{warning}</li>
+                                    <li key={index} className="text-destructive font-medium">{warning}</li>
                                 ))}
                             </ul>
                         </div>
@@ -120,28 +139,41 @@ export default function ResultPage() {
                     
                     {scan.ingredients && (
                          <div>
-                            <h2 className="font-semibold mb-2">Ingredients</h2>
-                            <p className="text-sm text-muted-foreground bg-secondary/50 p-3 rounded-lg">{scan.ingredients}</p>
+                            <h2 className="font-semibold text-lg mb-2">Ingredients</h2>
+                            <p className="text-sm text-muted-foreground bg-secondary/50 p-4 rounded-lg">{scan.ingredients}</p>
                         </div>
                     )}
 
-                    {scan.nutritionFacts && (
+                    {scan.nutritionFacts && Object.values(scan.nutritionFacts).some(v => v) && (
                         <div>
-                            <h2 className="font-semibold mb-2">Nutrition Facts</h2>
+                            <h2 className="font-semibold text-lg mb-2">Nutrition Facts</h2>
                             <div className="grid grid-cols-2 gap-2">
-                                <NutritionItem label="Carbs" value={scan.nutritionFacts.carbs} />
-                                <NutritionItem label="Fiber" value={scan.nutritionFacts.fiber} />
-                                <NutritionItem label="Sugar" value={scan.nutritionFacts.sugar} />
-                                <NutritionItem label="Sodium" value={scan.nutritionFacts.sodium} />
-                                <NutritionItem label="Protein" value={scan.nutritionFacts.protein} />
                                 <NutritionItem label="Calories" value={scan.nutritionFacts.calories} />
+                                <NutritionItem label="Carbs" value={scan.nutritionFacts.carbs} />
+                                <NutritionItem label="Sugar" value={scan.nutritionFacts.sugar} />
+                                <NutritionItem label="Protein" value={scan.nutritionFacts.protein} />
                                 <NutritionItem label="Saturated Fat" value={scan.nutritionFacts.saturatedFat} />
+                                <NutritionItem label="Fiber" value={scan.nutritionFacts.fiber} />
+                                <NutritionItem label="Sodium" value={scan.nutritionFacts.sodium} />
+                            </div>
+                        </div>
+                    )}
+                    
+                    {scan.alternatives && scan.alternatives.length > 0 && (
+                        <div>
+                            <h2 className="font-semibold text-lg mb-2">Safer Alternatives</h2>
+                             <div className="space-y-3">
+                                {scan.alternatives.map((alt, index) => (
+                                    <AlternativeItem key={index} name={alt.name} reason={alt.reason} />
+                                ))}
                             </div>
                         </div>
                     )}
                 </div>
 
-                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Separator className="my-8" />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Button onClick={() => router.push('/')}>Scan Another Product</Button>
                     <Button variant="outline" onClick={() => router.push('/history')}>View History</Button>
                 </div>
