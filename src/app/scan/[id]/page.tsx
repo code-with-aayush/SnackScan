@@ -7,7 +7,7 @@ import AppLayoutController from '@/components/layout/app-layout-controller';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { placeholderImages } from '@/lib/placeholder-images.json';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { ScanResult } from '@/lib/types';
@@ -22,7 +22,7 @@ const verdictStyles: { [key: string]: string } = {
 
 export default function ScanResultPage({ params }: { params: { id: string } }) {
   const { firestore, user } = useFirebase();
-  const resolvedParams = React.use(params as any);
+  const resolvedParams = React.use(params);
   const id = resolvedParams.id;
 
   const scanRef = useMemoFirebase(() => {
@@ -60,7 +60,7 @@ export default function ScanResultPage({ params }: { params: { id: string } }) {
   }
 
 
-  const productImage = placeholderImages.find(p => p.id === scan.imageId);
+  const productImage = PlaceHolderImages.find(p => p.id === scan.imageId);
 
   return (
     <AppLayoutController>

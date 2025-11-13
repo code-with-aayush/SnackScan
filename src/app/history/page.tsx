@@ -14,7 +14,7 @@ import AppLayoutController from '@/components/layout/app-layout-controller';
 import type { ScanResult } from '@/lib/types';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { placeholderImages } from '@/lib/placeholder-images.json';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Loader2 } from 'lucide-react';
 
 const verdictStyles: { [key: string]: string } = {
@@ -24,7 +24,7 @@ const verdictStyles: { [key: string]: string } = {
 };
 
 function ScanHistoryCard({ scan }: { scan: ScanResult }) {
-  const productImage = placeholderImages.find(p => p.id === scan.imageId);
+  const productImage = PlaceHolderImages.find(p => p.id === scan.imageId);
   return (
     <Link href={`/scan/${scan.id}`} className="block">
       <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
