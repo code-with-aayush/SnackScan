@@ -1,17 +1,16 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import AppLayoutController from '@/components/layout/app-layout-controller';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
 import type { ScanResult } from '@/lib/types';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 
 const verdictStyles: { [key: string]: string } = {
@@ -20,26 +19,29 @@ const verdictStyles: { [key: string]: string } = {
   Moderate: 'bg-accent/10 text-accent border-accent/20',
 };
 
-export default function ScanResultPage({ params }: { params: { id: string } }) {
-  const { firestore, user } = useFirebase();
-  const resolvedParams = React.use(params);
-  const id = resolvedParams.id;
+export default function ResultPage() {
   const router = useRouter();
-
-  const scanRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid, 'scanHistory', id);
-  }, [firestore, user, id]);
-
-  const { data: scan, isLoading } = useDoc<ScanResult>(scanRef);
+  const [scan, setScan] = useState<ScanResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && !scan) {
-      notFound();
+    const storedResult = sessionStorage.getItem('latestScanResult');
+    if (storedResult) {
+      try {
+        const resultData = JSON.parse(storedResult);
+        setScan(resultData);
+      } catch (error) {
+        console.error("Failed to parse scan result from sessionStorage", error);
+      } finally {
+         setIsLoading(false);
+      }
+    } else {
+      setIsLoading(false);
     }
-  }, [isLoading, scan, router]);
+  }, []);
 
-  if (isLoading || !scan) {
+
+  if (isLoading) {
     return (
        <AppLayoutController>
           <div className="flex h-[80vh] w-full items-center justify-center">
@@ -49,15 +51,27 @@ export default function ScanResultPage({ params }: { params: { id: string } }) {
     );
   }
 
+  if (!scan) {
+    return (
+      <AppLayoutController>
+         <div className="flex h-[80vh] w-full items-center justify-center flex-col gap-4">
+           <p className="text-muted-foreground">No scan result found.</p>
+           <Button onClick={() => router.push('/')}>Start a New Scan</Button>
+         </div>
+      </AppLayoutController>
+   );
+  }
+
+
   const productImage = PlaceHolderImages.find(p => p.id === scan.imageId);
 
   return (
     <AppLayoutController>
       <div className="p-4 md:p-8 animate-in fade-in-0 duration-500">
         <Button asChild variant="ghost" className="mb-4">
-          <Link href="/history">
+          <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to History
+            Scan Another Product
           </Link>
         </Button>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -75,7 +75,7 @@ export default function ScanUploader() {
       if (productName.toLowerCase().includes('chocolate')) imageId = 'chocolate';
 
 
-      const newScan: Omit<ScanResult, 'id'> = {
+      const newScanData: Omit<ScanResult, 'id'> = {
         userId: user.uid,
         productName: productName,
         scanDate: new Date().toISOString(),
@@ -88,11 +88,17 @@ export default function ScanUploader() {
         alternatives: assessment.alternatives || [],
       };
       
-      const docRef = await addDoc(scanHistoryRef, newScan);
+      const docRef = await addDoc(scanHistoryRef, newScanData);
       
-      // 4. Redirect to results
+      const finalScanResult: ScanResult = {
+        ...newScanData,
+        id: docRef.id,
+      };
+
+      // 4. Store result in sessionStorage and redirect
+      sessionStorage.setItem('latestScanResult', JSON.stringify(finalScanResult));
       setAnalysisMessage('Done!');
-      router.push(`/scan/${docRef.id}`);
+      router.push('/result');
 
     } catch (error: any) {
       console.error("Scan failed:", error);
