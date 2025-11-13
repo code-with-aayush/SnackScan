@@ -9,10 +9,24 @@ import { Badge } from '@/components/ui/badge';
 import AppLayoutController from '@/components/layout/app-layout-controller';
 import type { ScanResult } from '@/lib/types';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import { Loader2, Search, AlertTriangle, ShieldCheck, ShieldAlert, CircleAlert } from 'lucide-react';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { Loader2, Search, AlertTriangle, ShieldCheck, ShieldAlert, CircleAlert, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
+
 
 const verdictConfig = {
   Safe: {
@@ -32,18 +46,19 @@ const verdictConfig = {
   },
 };
 
-function ScanHistoryCard({ scan }: { scan: ScanResult }) {
+function ScanHistoryCard({ scan, onDelete }: { scan: ScanResult, onDelete: (scanId: string) => void }) {
   const currentVerdict = verdictConfig[scan.verdict] || verdictConfig['Moderate'];
   
   return (
-    <Link href={`/scan/${scan.id}`} className="block">
-      <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-        <CardContent className="p-4">
+      <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1 relative group">
+        <div className="p-4">
           <div className="flex justify-between items-start mb-2">
-            <div className="flex items-center gap-2">
-              <currentVerdict.icon className={cn("size-5", currentVerdict.style.split(' ')[1])} />
-              <h3 className="font-semibold text-lg">{scan.productName}</h3>
-            </div>
+            <Link href={`/scan/${scan.id}`} className="block flex-grow">
+                <div className="flex items-center gap-2">
+                <currentVerdict.icon className={cn("size-5", currentVerdict.style.split(' ')[1])} />
+                <h3 className="font-semibold text-lg">{scan.productName}</h3>
+                </div>
+            </Link>
             <div className="text-right flex-shrink-0 ml-4">
                <Badge className={cn("text-xs", currentVerdict.style)}>
                   {currentVerdict.label}
@@ -55,26 +70,48 @@ function ScanHistoryCard({ scan }: { scan: ScanResult }) {
           </div>
           
           <div className='pl-7'>
-             <p className="text-sm font-medium">Safety Analysis:</p>
-              <p className="text-sm text-muted-foreground mb-2">
-                {scan.analysis.reasoning}
-              </p>
+             <Link href={`/scan/${scan.id}`} className="block">
+                <p className="text-sm font-medium">Safety Analysis:</p>
+                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                    {scan.analysis.reasoning}
+                </p>
 
-              {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
-                 <div>
-                    <p className="text-sm font-medium">Recommendations:</p>
-                    <div className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-500">
-                        <AlertTriangle className="size-4 mt-0.5 flex-shrink-0" />
-                        <p>
-                        DO NOT CONSUME - This product contains allergens that could cause a serious allergic reaction. Look for alternatives without these allergens.
-                        </p>
+                {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
+                    <div>
+                        <p className="text-sm font-medium">Recommendations:</p>
+                        <div className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-500">
+                            <AlertTriangle className="size-4 mt-0.5 flex-shrink-0" />
+                            <p className='line-clamp-2'>
+                            DO NOT CONSUME - This product contains allergens that could cause a serious allergic reaction. Look for alternatives without these allergens.
+                            </p>
+                        </div>
                     </div>
-                </div>
-              )}
+                )}
+             </Link>
           </div>
-        </CardContent>
+        </div>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the scan for
+                <span className="font-semibold"> {scan.productName}</span>.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onDelete(scan.id)} className={cn(buttonVariants({variant: 'destructive'}))}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </Card>
-    </Link>
   );
 }
 
@@ -88,6 +125,7 @@ const StatCard = ({ label, value, colorClass }: { label: string; value: number; 
 export default function HistoryPage() {
   const { firestore, user } = useFirebase();
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
   const scanHistoryQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -95,6 +133,26 @@ export default function HistoryPage() {
   }, [firestore, user]);
 
   const { data: scanHistory, isLoading } = useCollection<ScanResult>(scanHistoryQuery);
+
+  const handleDelete = async (scanId: string) => {
+    if (!firestore || !user) return;
+    try {
+        const docRef = doc(firestore, 'users', user.uid, 'scanHistory', scanId);
+        await deleteDoc(docRef);
+        toast({
+            title: "Deleted",
+            description: "The scan has been removed from your history.",
+        });
+    } catch (error) {
+        console.error("Error deleting document: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not delete scan history. Please try again.",
+        });
+    }
+  };
+
 
   const filteredHistory = useMemo(() => {
     if (!scanHistory) return [];
@@ -153,7 +211,7 @@ export default function HistoryPage() {
           {!isLoading && filteredHistory && filteredHistory.length > 0 && (
             <div className="space-y-4">
               {filteredHistory.map(scan => (
-                <ScanHistoryCard key={scan.id} scan={scan} />
+                <ScanHistoryCard key={scan.id} scan={scan} onDelete={handleDelete} />
               ))}
             </div>
           )}
