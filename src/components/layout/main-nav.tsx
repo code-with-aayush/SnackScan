@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ScanLine, UserCircle, History, Salad } from 'lucide-react';
+import { ScanLine, UserCircle, History, Salad, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/tooltip';
 
 const navItems = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/', icon: ScanLine, label: 'Scan' },
   { href: '/history', icon: History, label: 'History' },
   { href: '/profile', icon: UserCircle, label: 'Profile' },
@@ -31,7 +32,7 @@ export default function MainNav() {
               href={item.href}
               className={cn(
                 'flex flex-col items-center justify-center w-full h-full transition-colors',
-                pathname === item.href
+                (pathname === item.href || (item.href === '/' && pathname.startsWith('/scan')))
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-primary'
               )}
@@ -62,7 +63,7 @@ export default function MainNav() {
                       href={item.href}
                       className={cn(
                         'flex items-center justify-center lg:justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-secondary',
-                        (pathname === item.href || (item.href === '/' && pathname.startsWith('/scan'))) &&
+                        (pathname === item.href || (item.href === '/' && (pathname.startsWith('/scan') || pathname === '/result')) ) &&
                           'text-primary bg-secondary'
                       )}
                     >

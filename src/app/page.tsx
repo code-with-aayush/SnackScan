@@ -1,6 +1,9 @@
 import AppLayoutController from '@/components/layout/app-layout-controller';
 import ScanUploader from '@/components/scan/scan-uploader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { BarChart } from 'lucide-react';
 
 export default function ScanPage() {
   return (
@@ -15,6 +18,14 @@ export default function ScanPage() {
           </CardHeader>
           <CardContent>
             <ScanUploader />
+             <div className="mt-4 text-center">
+                <Button variant="link" asChild>
+                    <Link href="/dashboard">
+                        <BarChart className="mr-2 h-4 w-4" />
+                        View Dashboard & Diet Tips
+                    </Link>
+                </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
