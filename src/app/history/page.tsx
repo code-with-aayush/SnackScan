@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -46,19 +47,19 @@ const verdictConfig = {
   },
 };
 
-function ScanHistoryCard({ scan, onDelete }: { scan: ScanResult, onDelete: (scanId: string) => void }) {
+function ScanHistoryCard({ scan, onDelete, onView }: { scan: ScanResult, onDelete: (scanId: string) => void, onView: (scan: ScanResult) => void }) {
   const currentVerdict = verdictConfig[scan.verdict] || verdictConfig['Moderate'];
   
   return (
       <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1 relative group">
-        <div className="p-4">
+        <div className="p-4 cursor-pointer" onClick={() => onView(scan)}>
           <div className="flex justify-between items-start mb-2">
-            <Link href={`/scan/${scan.id}`} className="block flex-grow">
+             <div className="flex-grow">
                 <div className="flex items-center gap-2">
                 <currentVerdict.icon className={cn("size-5", currentVerdict.style.split(' ')[1])} />
                 <h3 className="font-semibold text-lg">{scan.productName}</h3>
                 </div>
-            </Link>
+            </div>
             <div className="text-right flex-shrink-0 ml-4">
                <Badge className={cn("text-xs", currentVerdict.style)}>
                   {currentVerdict.label}
@@ -70,24 +71,22 @@ function ScanHistoryCard({ scan, onDelete }: { scan: ScanResult, onDelete: (scan
           </div>
           
           <div className='pl-7'>
-             <Link href={`/scan/${scan.id}`} className="block">
-                <p className="text-sm font-medium">Safety Analysis:</p>
-                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                    {scan.analysis.reasoning}
-                </p>
+            <p className="text-sm font-medium">Safety Analysis:</p>
+            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                {scan.analysis.reasoning}
+            </p>
 
-                {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
-                    <div>
-                        <p className="text-sm font-medium">Recommendations:</p>
-                        <div className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-500">
-                            <AlertTriangle className="size-4 mt-0.5 flex-shrink-0" />
-                            <p className='line-clamp-2'>
-                            DO NOT CONSUME - This product contains allergens that could cause a serious allergic reaction. Look for alternatives without these allergens.
-                            </p>
-                        </div>
+            {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
+                <div>
+                    <p className="text-sm font-medium">Recommendations:</p>
+                    <div className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-500">
+                        <AlertTriangle className="size-4 mt-0.5 flex-shrink-0" />
+                        <p className='line-clamp-2'>
+                        DO NOT CONSUME - This product contains allergens that could cause a serious allergic reaction. Look for alternatives without these allergens.
+                        </p>
                     </div>
-                )}
-             </Link>
+                </div>
+            )}
           </div>
         </div>
 
@@ -126,6 +125,7 @@ export default function HistoryPage() {
   const { firestore, user } = useFirebase();
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+  const router = useRouter();
 
   const scanHistoryQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -151,6 +151,11 @@ export default function HistoryPage() {
             description: "Could not delete scan history. Please try again.",
         });
     }
+  };
+  
+  const handleView = (scan: ScanResult) => {
+    sessionStorage.setItem('latestScanResult', JSON.stringify(scan));
+    router.push('/result');
   };
 
 
@@ -211,7 +216,7 @@ export default function HistoryPage() {
           {!isLoading && filteredHistory && filteredHistory.length > 0 && (
             <div className="space-y-4">
               {filteredHistory.map(scan => (
-                <ScanHistoryCard key={scan.id} scan={scan} onDelete={handleDelete} />
+                <ScanHistoryCard key={scan.id} scan={scan} onDelete={handleDelete} onView={handleView} />
               ))}
             </div>
           )}
