@@ -42,9 +42,23 @@ export default function ScanResultPage({ params }: { params: { id: string } }) {
     );
   }
 
-  if (!scan) {
+  if (!isLoading && !scan) {
     notFound();
   }
+
+  // This check is now safe because isLoading is false.
+  if (!scan) {
+    // This case should ideally not be reached if the above notFound() is hit,
+    // but it's good for type safety and as a fallback.
+    return (
+      <AppLayoutController>
+         <div className="flex h-[80vh] w-full items-center justify-center">
+           <p>Scan result not found.</p>
+         </div>
+      </AppLayoutController>
+   );
+  }
+
 
   const productImage = placeholderImages.find(p => p.id === scan.imageId);
 
