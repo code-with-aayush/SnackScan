@@ -51,7 +51,7 @@ Ingredients: {{{ingredients}}}
 
 Provide a safety verdict (Safe, Not Safe, or Moderate), clear reasoning, and alternative suggestions if the product is not suitable.
 
-Output in JSON format:
+Your output must be in a valid JSON format that adheres to the following schema:
 `,
 });
 
