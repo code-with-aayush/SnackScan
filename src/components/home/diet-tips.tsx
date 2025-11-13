@@ -14,22 +14,42 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getDietTipsAction } from '@/app/actions';
-import { getUserProfile, getScanHistory } from '@/lib/data';
+import { useFirebase, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import type { UserProfile, ScanResult } from '@/lib/types';
+import { collection, doc } from 'firebase/firestore';
+
 
 export default function DietTips() {
   const [tips, setTips] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user, firestore } = useFirebase();
+
+  const profileRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'profile');
+  }, [user, firestore]);
+  const { data: userProfile } = useDoc<UserProfile>(profileRef);
+
+  const scanHistoryQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'scanHistory');
+  }, [firestore, user]);
+  const { data: scanHistory } = useCollection<ScanResult>(scanHistoryQuery);
 
   const handleGetTips = async () => {
+    if (!userProfile || !scanHistory) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not load user data. Please try again.',
+      });
+      return;
+    }
+
     setLoading(true);
     setTips([]);
     
-    // In a real app, this data would come from the authenticated user's profile and scan history in Firestore.
-    // For now, we use mock data.
-    const userProfile = getUserProfile();
-    const scanHistory = getScanHistory();
-
     const healthProfileString = `Allergies: ${userProfile.allergies.join(', ') || 'None'}. Conditions: ${userProfile.healthConditions.join(', ') || 'None'}. Preferences: ${userProfile.dietaryPreferences.join(', ') || 'None'}.`;
     const scanHistoryString = scanHistory.map(s => `${s.productName} (${s.verdict})`).join('; ');
     
@@ -78,7 +98,7 @@ export default function DietTips() {
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleGetTips} disabled={loading} className="w-full">
+        <Button onClick={handleGetTips} disabled={loading || !userProfile} className="w-full">
           {loading ? 'Generating...' : 'Generate Tips'}
         </Button>
       </CardFooter>

@@ -3,8 +3,9 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useUser, useFirebase } from '@/firebase';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { signOut as firebaseSignOut } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +21,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { getUserProfile } from '@/lib/data';
+import type { UserProfile } from '@/lib/types';
+import { useEffect } from 'react';
+import { setDocumentNonBlocking } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 const dietaryPreferences = [
   { id: 'vegan', label: 'Vegan' },
@@ -38,10 +42,18 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-export default function ProfileForm() {
-  const { user, isUserLoading } = useUser();
-  const { auth } = useFirebase();
+export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: boolean }) {
+  const { user, isUserLoading, auth, firestore } = useFirebase();
   const { toast } = useToast();
+  const router = useRouter();
+
+
+  const profileRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'profile');
+  }, [user, firestore]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
 
   const signOut = () => {
     if (auth) {
@@ -49,26 +61,63 @@ export default function ProfileForm() {
     }
   };
 
-  // Fetch mock user profile data
-  const userProfile = getUserProfile();
-
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.displayName || userProfile.name,
-      allergies: userProfile.allergies.join(', '),
-      healthConditions: userProfile.healthConditions.join(', '),
-      dietaryPreferences: userProfile.dietaryPreferences,
+      name: '',
+      allergies: '',
+      healthConditions: '',
+      dietaryPreferences: [],
     },
   });
 
-  function onSubmit(data: ProfileFormValues) {
-    // In a real app, you would save this data to Firestore
-    console.log(data);
+  useEffect(() => {
+    if (userProfile) {
+      form.reset({
+        name: userProfile.name || user?.displayName || '',
+        allergies: (userProfile.allergies || []).join(', '),
+        healthConditions: (userProfile.healthConditions || []).join(', '),
+        dietaryPreferences: userProfile.dietaryPreferences || [],
+      });
+    } else if (user) {
+       form.reset({
+        name: user.displayName || '',
+        allergies: '',
+        healthConditions: '',
+        dietaryPreferences: [],
+      });
+    }
+  }, [userProfile, user, form]);
+
+  async function onSubmit(data: ProfileFormValues) {
+    if (!profileRef || !user) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in to update your profile.',
+      });
+      return;
+    }
+    
+    const profileData: UserProfile = {
+      id: user.uid,
+      email: user.email || '',
+      name: data.name,
+      allergies: data.allergies?.split(',').map(s => s.trim()).filter(Boolean) || [],
+      healthConditions: data.healthConditions?.split(',').map(s => s.trim()).filter(Boolean) || [],
+      dietaryPreferences: data.dietaryPreferences || [],
+    };
+
+    setDocumentNonBlocking(profileRef, profileData, { merge: true });
+
     toast({
       title: 'Profile Updated',
       description: 'Your health profile has been saved successfully.',
     });
+
+    if (isOnboarding) {
+      router.push('/');
+    }
   }
 
   return (
@@ -178,14 +227,16 @@ export default function ProfileForm() {
 
         <div className="flex flex-wrap gap-4 pt-4">
           <Button type="submit">Save Changes</Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={signOut}
-            disabled={isUserLoading}
-          >
-            Log Out
-          </Button>
+          {!isOnboarding && (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={signOut}
+              disabled={isUserLoading}
+            >
+              Log Out
+            </Button>
+          )}
         </div>
       </form>
     </Form>

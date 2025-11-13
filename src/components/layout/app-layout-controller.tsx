@@ -1,29 +1,49 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
-import { useEffect } from 'react';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import MainNav from './main-nav';
 import Header from './header';
+import { doc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
+import ProfileSetupPage from '@/app/profile/setup/page';
+
 
 function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading, firestore } = useFirebase();
   const router = useRouter();
+
+  const profileRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'profile');
+  }, [user, firestore]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
+
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.replace('/login');
+    } else if (!isUserLoading && user && !isProfileLoading) {
+       setInitialLoad(false);
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, isProfileLoading, userProfile]);
 
-  if (isUserLoading || !user) {
+  if (initialLoad || isUserLoading || isProfileLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
+  
+  if (!userProfile?.name) {
+    return <ProfileSetupPage />;
+  }
+
 
   return (
     <div className="min-h-screen w-full">
@@ -40,7 +60,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
 
 function AuthLayout({ children }: { children: React.ReactNode }) {
-    const { user, isUserLoading } = useUser();
+    const { user, isUserLoading } = useFirebase();
     const router = useRouter();
 
     useEffect(() => {
@@ -71,9 +91,14 @@ export default function AppLayoutController({
 }) {
   const pathname = usePathname();
   const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isSetupPage = pathname === '/profile/setup';
 
   if (isAuthPage) {
     return <AuthLayout>{children}</AuthLayout>;
+  }
+  
+  if (isSetupPage) {
+     return <>{children}</>;
   }
 
   return <AppShell>{children}</AppShell>;

@@ -1,8 +1,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { LogOut, User, ScanLine, LayoutDashboard, Menu } from 'lucide-react';
-import { useUser, useFirebase } from '@/firebase';
+import { LogOut, User, ScanLine, History, Menu } from 'lucide-react';
+import { useFirebase } from '@/firebase';
 import { signOut as firebaseSignOut } from 'firebase/auth';
 
 
@@ -20,15 +20,15 @@ import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Link from 'next/link';
 
 const pageTitles: { [key: string]: string } = {
-  '/': 'Dashboard',
+  '/': 'Scan Product',
+  '/history': 'Scan History',
   '/scan': 'Scan Product',
   '/profile': 'Profile',
 };
 
 export default function Header() {
   const pathname = usePathname();
-  const { user, isUserLoading } = useUser();
-  const { auth } = useFirebase();
+  const { user, isUserLoading, auth } = useFirebase();
 
   const signOut = () => {
     if (auth) {
@@ -48,8 +48,8 @@ export default function Header() {
   const title = pageTitles[pathname] || 'SnackScan';
   
   const navItems = [
-    { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { href: '/scan', icon: ScanLine, label: 'Scan' },
+    { href: '/', icon: ScanLine, label: 'Scan' },
+    { href: '/history', icon: History, label: 'History' },
     { href: '/profile', icon: User, label: 'Profile' },
   ];
 

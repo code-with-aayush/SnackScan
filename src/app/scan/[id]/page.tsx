@@ -1,13 +1,17 @@
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import AppLayoutController from '@/components/layout/app-layout-controller';
-import { getScanById } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { placeholderImages } from '@/lib/placeholder-images.json';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { ScanResult } from '@/lib/types';
+
 
 const verdictStyles: { [key: string]: string } = {
   Safe: 'bg-primary/10 text-primary border-primary/20',
@@ -16,7 +20,24 @@ const verdictStyles: { [key: string]: string } = {
 };
 
 export default function ScanResultPage({ params }: { params: { id: string } }) {
-  const scan = getScanById(params.id);
+  const { firestore, user } = useFirebase();
+
+  const scanRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid, 'scanHistory', params.id);
+  }, [firestore, user, params.id]);
+
+  const { data: scan, isLoading } = useDoc<ScanResult>(scanRef);
+
+  if (isLoading) {
+    return (
+       <AppLayoutController>
+          <div className="flex h-[80vh] w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+       </AppLayoutController>
+    );
+  }
 
   if (!scan) {
     notFound();
@@ -28,9 +49,9 @@ export default function ScanResultPage({ params }: { params: { id: string } }) {
     <AppLayoutController>
       <div className="p-4 md:p-8 animate-in fade-in-0 duration-500">
         <Button asChild variant="ghost" className="mb-4">
-          <Link href="/">
+          <Link href="/history">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back to History
           </Link>
         </Button>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -63,7 +84,7 @@ export default function ScanResultPage({ params }: { params: { id: string } }) {
               </CardHeader>
               <CardContent className="prose prose-sm dark:prose-invert max-w-none">
                 <p>{scan.analysis.reasoning}</p>
-                {scan.analysis.warnings.length > 0 && (
+                {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
                   <>
                     <h4>Potential Concerns:</h4>
                     <ul>
@@ -80,14 +101,18 @@ export default function ScanResultPage({ params }: { params: { id: string } }) {
                 <CardTitle>Alternative Suggestions</CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2">
-                  {scan.alternatives.map((alt, index) => (
-                    <li key={index} className="p-3 bg-secondary rounded-md">
-                      <p className="font-semibold">{alt.name}</p>
-                      <p className="text-sm text-muted-foreground">{alt.reason}</p>
-                    </li>
-                  ))}
-                </ul>
+                {scan.alternatives && scan.alternatives.length > 0 ? (
+                    <ul className="space-y-2">
+                    {scan.alternatives.map((alt, index) => (
+                        <li key={index} className="p-3 bg-secondary rounded-md">
+                        <p className="font-semibold">{alt.name}</p>
+                        <p className="text-sm text-muted-foreground">{alt.reason}</p>
+                        </li>
+                    ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-muted-foreground">No alternatives suggested for this product.</p>
+                )}
               </CardContent>
             </Card>
           </div>
