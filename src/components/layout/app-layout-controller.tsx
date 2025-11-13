@@ -1,18 +1,16 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import MainNav from './main-nav';
 import Header from './header';
-import { doc } from 'firebase/firestore';
-import type { UserProfile } from '@/lib/types';
-
 
 function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading, firestore } = useFirebase();
+  const { user, isUserLoading } = useFirebase();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [initialLoad, setInitialLoad] = useState(true);
 
@@ -25,6 +23,12 @@ function AppShell({ children }: { children: React.ReactNode }) {
       }
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (!isUserLoading && user && pathname === '/dashboard') {
+      router.replace('/');
+    }
+  }, [user, isUserLoading, router, pathname]);
 
   if (initialLoad) {
     return (
@@ -54,7 +58,7 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         if (!isUserLoading && user) {
-            router.replace('/dashboard');
+            router.replace('/');
         }
     }, [user, isUserLoading, router]);
 

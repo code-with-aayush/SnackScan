@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ScanLine, UserCircle, History, Salad, LayoutDashboard } from 'lucide-react';
+import { ScanLine, UserCircle, History, Salad, LayoutDashboard, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/tooltip';
 
 const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/dashboard', icon: Home, label: 'Home' },
   { href: '/', icon: ScanLine, label: 'Scan' },
   { href: '/history', icon: History, label: 'History' },
   { href: '/profile', icon: UserCircle, label: 'Profile' },
@@ -53,7 +53,7 @@ export default function MainNav() {
        <aside className="hidden md:flex fixed top-0 left-0 h-full z-40">
         <div className="flex flex-col items-center lg:items-start w-16 lg:w-60 border-r bg-card transition-all duration-300">
            <Link
-            href="/dashboard"
+            href="/"
             className="flex items-center justify-center lg:justify-start lg:pl-5 gap-2 h-14"
           >
             <Salad className="h-8 w-8 text-primary" />
