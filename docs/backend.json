@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile within the SnackScan application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name."
+        },
+        "healthConditions": {
+          "type": "array",
+          "description": "List of user's health conditions.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allergies": {
+          "type": "array",
+          "description": "List of user's allergies.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dietaryPreferences": {
+          "type": "array",
+          "description": "List of user's dietary preferences.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "name"
+      ]
+    },
+    "ProductScanHistory": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ProductScanHistory",
+      "type": "object",
+      "description": "Represents a record of a product that has been scanned.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ProductScanHistory entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ProductScanHistory)"
+        },
+        "productName": {
+          "type": "string",
+          "description": "Name of the scanned product."
+        },
+        "scanDate": {
+          "type": "string",
+          "description": "Date and time when the product was scanned.",
+          "format": "date-time"
+        },
+        "verdict": {
+          "type": "string",
+          "description": "The AI's safety assessment verdict for the product (Safe, Not Safe, Moderate)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "productName",
+        "scanDate",
+        "verdict"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/profile",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their profile. Includes denormalized userId for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/scanHistory/{scanId}",
+        "definition": {
+          "entityName": "ProductScanHistory",
+          "schema": {
+            "$ref": "#/backend/entities/ProductScanHistory"
+          },
+          "description": "Stores the scan history for each user. Path-based ownership ensures that each user can only access their own scan history. Includes denormalized userId for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "scanId",
+              "description": "The unique identifier of the scan history entry."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure secure and efficient data management for the SnackScan application, focusing on user profiles and product scan history. It adheres to the principles of Authorization Independence, Structural Segregation, and Access Modeling.  \n\nUser profiles are stored in a path-based ownership model under `/users/{userId}/profile`. This allows direct and secure access to each user's profile data. The ProductScanHistory is nested under each user's document at `/users/{userId}/scanHistory/{scanId}`, providing a clear ownership structure.  This design facilitates simple, robust security rules based solely on `request.auth.uid`, avoiding complex `get()` calls. All reads/writes of the `scanHistory` subcollection are scoped to the currently authenticated user, ensuring only a user can access their own scan history. This approach ensures Authorization Independence.\n\nThis design facilitates QAPs because each collection is segregated to have homogeneous security posture.  Rules can be written without having to filter or limit access based on complex role-based logic."
+  }
+}
