@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/tooltip';
 
 const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Home' },
-  { href: '/', icon: ScanLine, label: 'Scan' },
+  { href: '/', icon: Home, label: 'Home' },
+  { href: '/scan', icon: ScanLine, label: 'Scan' },
   { href: '/history', icon: History, label: 'History' },
   { href: '/profile', icon: UserCircle, label: 'Profile' },
 ];

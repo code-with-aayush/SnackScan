@@ -88,7 +88,7 @@ export default function ResultPage() {
       <AppLayoutController>
          <div className="flex h-[calc(100vh-56px)] md:h-auto md:min-h-[500px] w-full items-center justify-center flex-col gap-4">
            <p className="text-muted-foreground">No scan result found.</p>
-           <Button onClick={() => router.push('/')}>Start a New Scan</Button>
+           <Button onClick={() => router.push('/scan')}>Start a New Scan</Button>
          </div>
       </AppLayoutController>
    );
@@ -100,7 +100,7 @@ export default function ResultPage() {
     <AppLayoutController>
       <div className="p-4 md:p-6 animate-in fade-in-0 duration-500 max-w-3xl mx-auto">
         <Button asChild variant="ghost" className="mb-4 -ml-4 text-muted-foreground">
-          <Link href="/">
+          <Link href="/scan">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Scan Another Product
           </Link>
@@ -174,7 +174,7 @@ export default function ResultPage() {
                 <Separator className="my-8" />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Button onClick={() => router.push('/')}>Scan Another Product</Button>
+                    <Button onClick={() => router.push('/scan')}>Scan Another Product</Button>
                     <Button variant="outline" onClick={() => router.push('/history')}>View History</Button>
                 </div>
 

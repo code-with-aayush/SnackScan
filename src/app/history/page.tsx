@@ -190,7 +190,7 @@ export default function HistoryPage() {
               </p>
                {(!scanHistory || scanHistory.length === 0) && (
                  <Button asChild className="mt-4">
-                    <Link href="/">
+                    <Link href="/scan">
                         Start scanning
                     </Link>
                  </Button>

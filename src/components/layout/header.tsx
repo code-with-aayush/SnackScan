@@ -20,10 +20,9 @@ import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Link from 'next/link';
 
 const pageTitles: { [key: string]: string } = {
-  '/dashboard': 'Dashboard',
-  '/': 'Scan Product',
-  '/history': 'Scan History',
+  '/': 'Dashboard',
   '/scan': 'Scan Product',
+  '/history': 'Scan History',
   '/profile': 'Profile',
   '/result': 'Scan Result',
 };
@@ -48,16 +47,14 @@ export default function Header() {
   };
 
   const findTitle = (path: string) => {
-    if (pageTitles[path]) return pageTitles[path];
-    if (path.startsWith('/scan/')) return "Scan Details";
-    return 'SnackScan';
+    return pageTitles[path] || 'SnackScan';
   }
 
   const title = findTitle(pathname);
   
   const navItems = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { href: '/', icon: ScanLine, label: 'Scan' },
+    { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/scan', icon: ScanLine, label: 'Scan' },
     { href: '/history', icon: History, label: 'History' },
     { href: '/profile', icon: User, label: 'Profile' },
   ];

@@ -10,8 +10,6 @@ import Header from './header';
 function AppShell({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useFirebase();
   const router = useRouter();
-  const pathname = usePathname();
-
   const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
@@ -23,12 +21,6 @@ function AppShell({ children }: { children: React.ReactNode }) {
       }
     }
   }, [user, isUserLoading, router]);
-
-  useEffect(() => {
-    if (!isUserLoading && user && pathname === '/dashboard') {
-      router.replace('/');
-    }
-  }, [user, isUserLoading, router, pathname]);
 
   if (initialLoad) {
     return (
