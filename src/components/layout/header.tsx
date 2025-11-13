@@ -2,7 +2,9 @@
 
 import { usePathname } from 'next/navigation';
 import { LogOut, User, ScanLine, LayoutDashboard, Menu } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useUser, useFirebase } from '@/firebase';
+import { signOut as firebaseSignOut } from 'firebase/auth';
+
 
 import {
   DropdownMenu,
@@ -25,7 +27,14 @@ const pageTitles: { [key: string]: string } = {
 
 export default function Header() {
   const pathname = usePathname();
-  const { user, signOut, loading } = useAuth();
+  const { user, isUserLoading } = useUser();
+  const { auth } = useFirebase();
+
+  const signOut = () => {
+    if (auth) {
+      firebaseSignOut(auth);
+    }
+  };
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -96,7 +105,7 @@ export default function Header() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={signOut}
-            disabled={loading}
+            disabled={isUserLoading}
             className="cursor-pointer"
           >
             <LogOut className="mr-2 h-4 w-4" />

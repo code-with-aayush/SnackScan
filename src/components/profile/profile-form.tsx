@@ -3,7 +3,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useAuth } from '@/hooks/use-auth';
+import { useUser, useFirebase } from '@/firebase';
+import { signOut as firebaseSignOut } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -38,8 +39,15 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfileForm() {
-  const { user, signOut, loading } = useAuth();
+  const { user, isUserLoading } = useUser();
+  const { auth } = useFirebase();
   const { toast } = useToast();
+
+  const signOut = () => {
+    if (auth) {
+      firebaseSignOut(auth);
+    }
+  };
 
   // Fetch mock user profile data
   const userProfile = getUserProfile();
@@ -174,7 +182,7 @@ export default function ProfileForm() {
             type="button"
             variant="destructive"
             onClick={signOut}
-            disabled={loading}
+            disabled={isUserLoading}
           >
             Log Out
           </Button>

@@ -1,12 +1,11 @@
 'use client';
 
-import { AuthProvider } from '@/hooks/use-auth';
-import AppLayoutController from '@/components/layout/app-layout-controller';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
+    <FirebaseClientProvider>
         {children}
-    </AuthProvider>
+    </FirebaseClientProvider>
   );
 }

@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useAuth } from '@/hooks/use-auth';
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from 'firebase/auth';
+import { useFirebase } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +32,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleIcon } from '../icons/google-icon';
+import { useState } from 'react';
 
 const formSchema = z
   .object({
@@ -44,7 +50,8 @@ const formSchema = z
 export default function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { emailSignUp, googleSignIn, loading } = useAuth();
+  const { auth } = useFirebase();
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,36 +63,43 @@ export default function SignupForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const { error } = await emailSignUp(values.email, values.password);
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Sign Up Failed',
-        description: error,
-      });
-    } else {
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: 'Account Created',
         description: 'Welcome to SnackScan! Please log in.',
       });
       router.push('/login');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Sign Up Failed',
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
     }
   }
 
   async function handleGoogleSignIn() {
-    const { error } = await googleSignIn();
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Google Sign-In Failed',
-        description: error,
-      });
-    } else {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
       toast({
         title: 'Sign Up Successful',
         description: 'Welcome to SnackScan!',
       });
       router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Google Sign-In Failed',
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
     }
   }
 

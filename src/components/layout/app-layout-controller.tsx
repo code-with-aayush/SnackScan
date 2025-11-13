@@ -1,23 +1,23 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useUser } from '@/firebase';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import MainNav from './main-nav';
 import Header from './header';
 
 function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isUserLoading && !user) {
       router.replace('/login');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
 
-  if (loading || !user) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -40,16 +40,16 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
 
 function AuthLayout({ children }: { children: React.ReactNode }) {
-    const { user, loading } = useAuth();
+    const { user, isUserLoading } = useUser();
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && user) {
+        if (!isUserLoading && user) {
             router.replace('/');
         }
-    }, [user, loading, router]);
+    }, [user, isUserLoading, router]);
 
-    if(loading || user) {
+    if(isUserLoading || user) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
