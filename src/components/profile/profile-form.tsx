@@ -42,10 +42,9 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: boolean }) {
+export default function ProfileForm() {
   const { user, isUserLoading, auth, firestore } = useFirebase();
   const { toast } = useToast();
-  const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
 
 
@@ -54,7 +53,7 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
+  const { data: userProfile } = useDoc<UserProfile>(profileRef);
 
   const signOut = () => {
     if (auth) {
@@ -102,8 +101,7 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
     
     setIsSaving(true);
     
-    const profileData: UserProfile = {
-      id: user.uid,
+    const profileData: Partial<UserProfile> = {
       email: user.email || '',
       name: data.name,
       allergies: data.allergies?.split(',').map(s => s.trim()).filter(Boolean) || [],
@@ -115,12 +113,8 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
         await setDoc(profileRef, profileData, { merge: true });
         toast({
           title: 'Profile Saved',
-          description: isOnboarding ? 'Welcome! You can now start scanning.' : 'Your health profile has been updated.',
+          description: 'Your health profile has been updated.',
         });
-
-        if (isOnboarding) {
-          router.push('/dashboard');
-        }
     } catch(e: any) {
          toast({
             variant: 'destructive',
@@ -240,18 +234,16 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
         <div className="flex flex-wrap gap-4 pt-4">
            <Button type="submit" disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isOnboarding ? 'Continue' : 'Save Changes'}
+            Save Changes
           </Button>
-          {!isOnboarding && (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={signOut}
-              disabled={isUserLoading}
-            >
-              Log Out
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={signOut}
+            disabled={isUserLoading}
+          >
+            Log Out
+          </Button>
         </div>
       </form>
     </Form>
