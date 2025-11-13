@@ -91,43 +91,17 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their profile. Includes denormalized userId for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
-        }
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
       },
-      {
-        "path": "/users/{userId}/scanHistory/{scanId}",
-        "definition": {
-          "entityName": "ProductScanHistory",
-          "schema": {
-            "$ref": "#/backend/entities/ProductScanHistory"
-          },
-          "description": "Stores the scan history for each user. Path-based ownership ensures that each user can only access their own scan history. Includes denormalized userId for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "scanId",
-              "description": "The unique identifier of the scan history entry."
-            }
-          ]
-        }
-      }
-    ]
+      "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their profile."
+    },
+    "/users/{userId}/scanHistory/{scanId}": {
+      "schema": {
+        "$ref": "#/entities/ProductScanHistory"
+      },
+      "description": "Stores the scan history for each user. Path-based ownership ensures that each user can only access their own scan history."
+    }
   }
 }
