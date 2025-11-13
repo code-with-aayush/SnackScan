@@ -93,6 +93,7 @@ export default function ScanUploader() {
       const finalScanResult: ScanResult = {
         ...newScanData,
         id: docRef.id,
+        scannedImage: photoDataUri,
       };
 
       // 4. Store result in sessionStorage and redirect

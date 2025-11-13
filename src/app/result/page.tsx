@@ -63,7 +63,9 @@ export default function ResultPage() {
   }
 
 
-  const productImage = PlaceHolderImages.find(p => p.id === scan.imageId);
+  const productImage = scan.scannedImage 
+    ? { imageUrl: scan.scannedImage, description: scan.productName, imageHint: '' }
+    : PlaceHolderImages.find(p => p.id === scan.imageId);
 
   return (
     <AppLayoutController>
@@ -83,8 +85,8 @@ export default function ResultPage() {
                     src={productImage.imageUrl}
                     alt={scan.productName}
                     data-ai-hint={productImage.imageHint}
-                    width={400}
-                    height={400}
+                    width={300}
+                    height={300}
                     className="w-full h-auto rounded-lg object-cover aspect-square"
                   />
                 )}

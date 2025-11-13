@@ -14,6 +14,7 @@ export interface ScanResult {
   verdict: 'Safe' | 'Not Safe' | 'Moderate';
   scanDate: string;
   imageId: string;
+  scannedImage?: string;
   analysis: {
     reasoning: string;
     warnings: string[];
