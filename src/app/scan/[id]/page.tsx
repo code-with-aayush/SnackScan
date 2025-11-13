@@ -11,6 +11,7 @@ import { placeholderImages } from '@/lib/placeholder-images.json';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { ScanResult } from '@/lib/types';
+import React from 'react';
 
 
 const verdictStyles: { [key: string]: string } = {
@@ -21,7 +22,8 @@ const verdictStyles: { [key: string]: string } = {
 
 export default function ScanResultPage({ params }: { params: { id: string } }) {
   const { firestore, user } = useFirebase();
-  const { id } = params;
+  const resolvedParams = React.use(params as any);
+  const id = resolvedParams.id;
 
   const scanRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
