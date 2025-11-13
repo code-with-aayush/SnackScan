@@ -4,11 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UploadCloud, Loader2 } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, addDoc, collection } from 'firebase/firestore';
 import type { UserProfile, ScanResult } from '@/lib/types';
 import { assessFoodSafety } from '@/ai/ai-safety-assessment';
-import { addDoc } from 'firebase/firestore';
-import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { ocr } from '@/ai/flows/ocr-flow';
 
