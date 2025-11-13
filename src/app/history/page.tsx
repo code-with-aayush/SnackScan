@@ -13,7 +13,7 @@ import { collection, doc, deleteDoc } from 'firebase/firestore';
 import { Loader2, Search, AlertTriangle, ShieldCheck, ShieldAlert, CircleAlert, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
