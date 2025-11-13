@@ -21,11 +21,12 @@ const verdictStyles: { [key: string]: string } = {
 
 export default function ScanResultPage({ params }: { params: { id: string } }) {
   const { firestore, user } = useFirebase();
+  const { id } = params;
 
   const scanRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid, 'scanHistory', params.id);
-  }, [firestore, user, params.id]);
+    return doc(firestore, 'users', user.uid, 'scanHistory', id);
+  }, [firestore, user, id]);
 
   const { data: scan, isLoading } = useDoc<ScanResult>(scanRef);
 
