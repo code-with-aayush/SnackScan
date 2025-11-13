@@ -7,7 +7,7 @@ import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { UserProfile, ScanResult } from '@/lib/types';
 import { assessFoodSafety } from '@/ai/ai-safety-assessment';
-import { addDocumentNonBlocking } from '@/firebase';
+import { addDoc } from 'firebase/firestore';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -94,8 +94,9 @@ export default function ScanUploader() {
             { name: "Alternative Suggestion", reason: assessment.alternativeSuggestions }
         ] : [],
       };
-
-      const docRef = await addDocumentNonBlocking(scanHistoryRef, newScan);
+      
+      // CRITICAL FIX: Await the document creation to get its ID.
+      const docRef = await addDoc(scanHistoryRef, newScan);
       
       // 4. Redirect to results
       setAnalysisMessage('Done!');
