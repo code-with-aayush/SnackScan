@@ -10,24 +10,16 @@ import { assessFoodSafety } from '@/ai/ai-safety-assessment';
 import { addDoc } from 'firebase/firestore';
 import { collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { ocr } from '@/ai/flows/ocr-flow';
 
-// Mock function to simulate OCR
-async function mockOcr(file: File): Promise<{ ingredients: string, productName: string }> {
-  console.log('Simulating OCR for file:', file.name);
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // This is a mock response. In a real app, you'd use an OCR service.
-  // We'll return ingredients that will trigger different verdicts based on the default user profile.
-  if (file.name.toLowerCase().includes('cereal')) {
-     return { productName: "Honey Nut Cereal", ingredients: 'Oats, Sugar, Peanut, Honey, Salt' };
-  }
-  if (file.name.toLowerCase().includes('soda')) {
-      return { productName: "Diet Cola", ingredients: 'Carbonated Water, Caramel Color, Aspartame, Phosphoric Acid, Potassium Benzoate, Natural Flavors, Citric Acid' };
-  }
-  // Default to chips
-  return { productName: "Spicy Nacho Chips", ingredients: 'Corn, Vegetable Oil, Salt, Cheddar Cheese, Monosodium Glutamate, Soy' };
+function fileToDataUri(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
-
 
 export default function ScanUploader() {
   const [loading, setLoading] = useState(false);
@@ -57,9 +49,14 @@ export default function ScanUploader() {
     setLoading(true);
 
     try {
-      // 1. OCR Simulation
+      // 1. Convert file to data URI and perform OCR
       setAnalysisMessage('Reading ingredients from image...');
-      const { ingredients, productName } = await mockOcr(file);
+      const photoDataUri = await fileToDataUri(file);
+      const { ingredients, productName } = await ocr({ photoDataUri });
+
+      if (!ingredients || !productName) {
+        throw new Error('AI could not identify the product or its ingredients. Please try another image.');
+      }
 
       // 2. AI Safety Assessment
       setAnalysisMessage('Assessing product safety with AI...');
@@ -74,10 +71,10 @@ export default function ScanUploader() {
       setAnalysisMessage('Saving scan results...');
       const scanHistoryRef = collection(firestore, 'users', user.uid, 'scanHistory');
       
-      // A simple way to get a somewhat relevant imageId
       let imageId = 'chips';
       if (productName.toLowerCase().includes('cereal')) imageId = 'cereal';
       if (productName.toLowerCase().includes('soda')) imageId = 'soda';
+      if (productName.toLowerCase().includes('chocolate')) imageId = 'chocolate';
 
 
       const newScan: Omit<ScanResult, 'id'> = {
@@ -99,12 +96,12 @@ export default function ScanUploader() {
       setAnalysisMessage('Done!');
       router.push(`/scan/${docRef.id}`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Scan failed:", error);
       toast({
         variant: 'destructive',
         title: 'Scan Failed',
-        description: 'Something went wrong during the analysis. Please try again.',
+        description: error.message || 'Something went wrong during the analysis. Please try again.',
       });
       setLoading(false);
     }
