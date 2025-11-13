@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ScanLine, UserCircle, History, Salad, LayoutDashboard, Home } from 'lucide-react';
+import { ScanLine, UserCircle, History, Salad, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -30,7 +31,7 @@ export default function MainNav() {
     <>
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card border-t z-40 shadow-[0_-1px_4px_rgba(0,0,0,0.05)]">
-        <div className="flex justify-around items-center h-full">
+        <div className="flex justify-around items-center h-full pb-safe">
           {navItems.map(item => (
             <Link
               key={item.href}
