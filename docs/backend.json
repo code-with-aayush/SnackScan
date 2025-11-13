@@ -93,7 +93,7 @@
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}/profile",
+        "path": "/users/{userId}",
         "definition": {
           "entityName": "UserProfile",
           "schema": {
@@ -128,7 +128,6 @@
           ]
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to ensure secure and efficient data management for the SnackScan application, focusing on user profiles and product scan history. It adheres to the principles of Authorization Independence, Structural Segregation, and Access Modeling.  \n\nUser profiles are stored in a path-based ownership model under `/users/{userId}/profile`. This allows direct and secure access to each user's profile data. The ProductScanHistory is nested under each user's document at `/users/{userId}/scanHistory/{scanId}`, providing a clear ownership structure.  This design facilitates simple, robust security rules based solely on `request.auth.uid`, avoiding complex `get()` calls. All reads/writes of the `scanHistory` subcollection are scoped to the currently authenticated user, ensuring only a user can access their own scan history. This approach ensures Authorization Independence.\n\nThis design facilitates QAPs because each collection is segregated to have homogeneous security posture.  Rules can be written without having to filter or limit access based on complex role-based logic."
+    ]
   }
 }

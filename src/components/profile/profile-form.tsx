@@ -50,7 +50,7 @@ export default function ProfileForm({ isOnboarding = false }: { isOnboarding?: b
 
   const profileRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return doc(firestore, 'users', user.uid, 'profile');
+    return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
