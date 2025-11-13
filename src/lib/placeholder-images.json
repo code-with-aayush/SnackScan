@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "chips",
+      "description": "A bag of potato chips on a table.",
+      "imageUrl": "https://images.unsplash.com/photo-1599493356626-9fdbdabfd9bd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwb3RhdG8lMjBjaGlwc3xlbnwwfHx8fDE3NjI5NjA3NjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "potato chips"
+    },
+    {
+      "id": "cereal",
+      "description": "A box of breakfast cereal.",
+      "imageUrl": "https://images.unsplash.com/photo-1757800945895-a08e7eff9702?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjZXJlYWwlMjBib3h8ZW58MHx8fHwxNzYyOTkyNjYzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cereal box"
+    },
+    {
+      "id": "soda",
+      "description": "A can of soda with condensation.",
+      "imageUrl": "https://images.unsplash.com/photo-1603569239784-0a4b159fa3dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzb2RhJTIwY2FufGVufDB8fHx8MTc2Mjk2MDc2NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "soda can"
+    },
+    {
+      "id": "chocolate",
+      "description": "A bar of chocolate, partially unwrapped.",
+      "imageUrl": "https://images.unsplash.com/photo-1638194645412-1d0b4c53ffed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjaG9jb2xhdGUlMjBiYXJ8ZW58MHx8fHwxNzYyOTA3MDIzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chocolate bar"
+    }
+  ]
 }
