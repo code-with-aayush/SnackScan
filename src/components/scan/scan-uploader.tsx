@@ -50,7 +50,7 @@ export default function ScanUploader() {
       // 1. Convert file to data URI and perform OCR
       setAnalysisMessage('Reading ingredients from image...');
       const photoDataUri = await fileToDataUri(file);
-      const { ingredients, productName } = await ocr({ photoDataUri });
+      const { ingredients, productName, nutritionFacts } = await ocr({ photoDataUri });
 
       if (!ingredients || !productName) {
         throw new Error('AI could not identify the product or its ingredients. Please try another image.');
@@ -86,6 +86,8 @@ export default function ScanUploader() {
           warnings: assessment.warnings || [],
         },
         alternatives: assessment.alternatives || [],
+        ingredients: ingredients,
+        nutritionFacts: nutritionFacts,
       };
       
       const docRef = await addDoc(scanHistoryRef, newScanData);

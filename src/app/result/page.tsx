@@ -1,22 +1,39 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, ShieldCheck, ShieldAlert, CircleAlert } from 'lucide-react';
 import AppLayoutController from '@/components/layout/app-layout-controller';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { ScanResult } from '@/lib/types';
 import React from 'react';
+import { cn } from '@/lib/utils';
 
+const verdictConfig = {
+  'Safe': {
+    style: 'bg-primary/10 text-primary border-primary/20',
+    icon: ShieldCheck,
+  },
+  'Not Safe': {
+    style: 'bg-destructive/10 text-destructive border-destructive/20',
+    icon: ShieldAlert,
+  },
+  'Moderate': {
+    style: 'bg-accent/10 text-accent border-accent/20',
+    icon: CircleAlert,
+  },
+};
 
-const verdictStyles: { [key: string]: string } = {
-  Safe: 'bg-primary/10 text-primary border-primary/20',
-  'Not Safe': 'bg-destructive/10 text-destructive border-destructive/20',
-  Moderate: 'bg-accent/10 text-accent border-accent/20',
+const NutritionItem = ({ label, value }: { label: string, value?: string }) => {
+  if (!value) return null;
+  return (
+    <div className="flex justify-between items-baseline p-3 bg-secondary/50 rounded-lg">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
+  );
 };
 
 export default function ResultPage() {
@@ -61,84 +78,76 @@ export default function ResultPage() {
       </AppLayoutController>
    );
   }
-
-
-  const productImage = scan.scannedImage 
-    ? { imageUrl: scan.scannedImage, description: scan.productName, imageHint: '' }
-    : PlaceHolderImages.find(p => p.id === scan.imageId);
+  
+  const currentVerdict = verdictConfig[scan.verdict];
 
   return (
     <AppLayoutController>
-      <div className="p-4 md:p-8 animate-in fade-in-0 duration-500">
-        <Button asChild variant="ghost" className="mb-4">
+      <div className="p-4 md:p-6 animate-in fade-in-0 duration-500 max-w-3xl mx-auto">
+        <Button asChild variant="ghost" className="mb-4 text-muted-foreground">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Scan Another Product
           </Link>
         </Button>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <Card>
-              <CardContent className="p-4">
-                {productImage && (
-                  <Image
-                    src={productImage.imageUrl}
-                    alt={scan.productName}
-                    data-ai-hint={productImage.imageHint}
-                    width={300}
-                    height={300}
-                    className="w-full h-auto rounded-lg object-cover aspect-square"
-                  />
-                )}
-                <div className="mt-4 text-center">
-                  <h1 className="text-2xl font-bold">{scan.productName}</h1>
-                  <Badge className={`mt-2 text-base px-4 py-1 ${verdictStyles[scan.verdict]}`}>
-                    {scan.verdict}
-                  </Badge>
+        
+        <Card className="w-full">
+            <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center">
+                    <currentVerdict.icon className={cn("size-10 mb-3", verdictConfig[scan.verdict].style.split(' ')[1])} />
+                    <h1 className="text-2xl font-bold">{scan.productName}</h1>
+                    <Badge className={cn("mt-2 text-sm px-3 py-1", currentVerdict.style)}>
+                        {scan.verdict}
+                    </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="lg:col-span-2 space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Analysis</CardTitle>
-              </CardHeader>
-              <CardContent className="prose prose-sm dark:prose-invert max-w-none">
-                <p>{scan.analysis.reasoning}</p>
-                {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
-                  <>
-                    <h4>Potential Concerns:</h4>
-                    <ul>
-                      {scan.analysis.warnings.map((warning, index) => (
-                        <li key={index}>{warning}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Alternative Suggestions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {scan.alternatives && scan.alternatives.length > 0 ? (
-                    <ul className="space-y-2">
-                    {scan.alternatives.map((alt, index) => (
-                        <li key={index} className="p-3 bg-secondary rounded-md">
-                        <p className="font-semibold">{alt.name}</p>
-                        <p className="text-sm text-muted-foreground">{alt.reason}</p>
-                        </li>
-                    ))}
-                    </ul>
-                ) : (
-                    <p className="text-sm text-muted-foreground">No alternatives suggested for this product.</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                
+                <div className="mt-6 space-y-5">
+                    <div>
+                        <h2 className="font-semibold mb-2">Safety Analysis</h2>
+                        <p className="text-sm text-muted-foreground">{scan.analysis.reasoning}</p>
+                    </div>
+
+                    {scan.analysis.warnings && scan.analysis.warnings.length > 0 && (
+                        <div>
+                            <h3 className="font-semibold text-destructive mb-2 flex items-center gap-2"><AlertTriangle className="size-4" /> Critical Issues</h3>
+                            <ul className="list-disc pl-5 space-y-1 text-sm">
+                                {scan.analysis.warnings.map((warning, index) => (
+                                    <li key={index} className="text-destructive">{warning}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    
+                    {scan.ingredients && (
+                         <div>
+                            <h2 className="font-semibold mb-2">Ingredients</h2>
+                            <p className="text-sm text-muted-foreground bg-secondary/50 p-3 rounded-lg">{scan.ingredients}</p>
+                        </div>
+                    )}
+
+                    {scan.nutritionFacts && (
+                        <div>
+                            <h2 className="font-semibold mb-2">Nutrition Facts</h2>
+                            <div className="grid grid-cols-2 gap-2">
+                                <NutritionItem label="Carbs" value={scan.nutritionFacts.carbs} />
+                                <NutritionItem label="Fiber" value={scan.nutritionFacts.fiber} />
+                                <NutritionItem label="Sugar" value={scan.nutritionFacts.sugar} />
+                                <NutritionItem label="Sodium" value={scan.nutritionFacts.sodium} />
+                                <NutritionItem label="Protein" value={scan.nutritionFacts.protein} />
+                                <NutritionItem label="Calories" value={scan.nutritionFacts.calories} />
+                                <NutritionItem label="Saturated Fat" value={scan.nutritionFacts.saturatedFat} />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Button onClick={() => router.push('/')}>Scan Another Product</Button>
+                    <Button variant="outline" onClick={() => router.push('/history')}>View History</Button>
+                </div>
+
+            </CardContent>
+        </Card>
       </div>
     </AppLayoutController>
   );

@@ -22,6 +22,15 @@ export type OcrInput = z.infer<typeof OcrInputSchema>;
 const OcrOutputSchema = z.object({
   productName: z.string().describe('The name of the food product.'),
   ingredients: z.string().describe('The list of ingredients from the food product.'),
+  nutritionFacts: z.object({
+    carbs: z.string().optional().describe('Carbohydrates in grams (e.g., "22g")'),
+    sugar: z.string().optional().describe('Sugar in grams (e.g., "12g")'),
+    protein: z.string().optional().describe('Protein in grams (e.g., "3g")'),
+    saturatedFat: z.string().optional().describe('Saturated fat in grams (e_g., "0.5g")'),
+    fiber: z.string().optional().describe('Fiber in grams (e.g., "3g")'),
+    sodium: z.string().optional().describe('Sodium in milligrams (e.g., "190mg")'),
+    calories: z.string().optional().describe('Calories (e.g., "110kcal" or "110")'),
+  }).describe('The nutrition facts from the food product label.'),
 });
 export type OcrOutput = z.infer<typeof OcrOutputSchema>;
 
@@ -33,7 +42,7 @@ const prompt = ai.definePrompt({
   name: 'ocrPrompt',
   input: {schema: OcrInputSchema},
   output: {schema: OcrOutputSchema},
-  prompt: `You are an expert at reading food labels. Analyze the provided image and extract the product name and the list of ingredients.
+  prompt: `You are an expert at reading food labels. Analyze the provided image and extract the product name, the list of ingredients, and the nutrition facts.
 
 Image: {{media url=photoDataUri}}
 

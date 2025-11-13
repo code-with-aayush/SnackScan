@@ -7,6 +7,16 @@ export interface UserProfile {
   dietaryPreferences: string[];
 }
 
+export interface NutritionFacts {
+    carbs?: string;
+    sugar?: string;
+    protein?: string;
+    saturatedFat?: string;
+    fiber?: string;
+    sodium?: string;
+    calories?: string;
+}
+
 export interface ScanResult {
   id: string;
   userId: string;
@@ -23,4 +33,6 @@ export interface ScanResult {
     name: string;
     reason: string;
   }[];
+  ingredients?: string;
+  nutritionFacts?: NutritionFacts;
 }
