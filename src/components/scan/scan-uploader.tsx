@@ -88,14 +88,11 @@ export default function ScanUploader() {
         imageId,
         analysis: {
           reasoning: assessment.reasoning,
-          warnings: [], // The AI response could be parsed to fill this
+          warnings: assessment.warnings || [],
         },
-        alternatives: assessment.alternativeSuggestions ? [
-            { name: "Alternative Suggestion", reason: assessment.alternativeSuggestions }
-        ] : [],
+        alternatives: assessment.alternatives || [],
       };
       
-      // CRITICAL FIX: Await the document creation to get its ID.
       const docRef = await addDoc(scanHistoryRef, newScan);
       
       // 4. Redirect to results

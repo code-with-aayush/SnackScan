@@ -29,9 +29,11 @@ const AISafetyAssessmentOutputSchema = z.object({
     .enum(['Safe', 'Not Safe', 'Moderate'])
     .describe('The safety verdict for the food product.'),
   reasoning: z.string().describe('The reasoning behind the safety verdict.'),
-  alternativeSuggestions: z
-    .string()
-    .describe('Alternative food product suggestions, if applicable.'),
+  warnings: z.array(z.string()).describe('A list of potential concerns or warnings.'),
+  alternatives: z.array(z.object({
+    name: z.string().describe('The name of the alternative product.'),
+    reason: z.string().describe('The reason why this is a good alternative.')
+  })).describe('A list of alternative food product suggestions, if applicable.'),
 });
 
 export type AISafetyAssessmentOutput = z.infer<typeof AISafetyAssessmentOutputSchema>;
@@ -49,7 +51,7 @@ const prompt = ai.definePrompt({
 Health Profile: {{{healthProfile}}}
 Ingredients: {{{ingredients}}}
 
-Provide a safety verdict (Safe, Not Safe, or Moderate), clear reasoning, and alternative suggestions if the product is not suitable.
+Provide a safety verdict (Safe, Not Safe, or Moderate), clear reasoning, a list of warnings (if any), and a list of alternative suggestions if the product is not suitable.
 
 Your output must be in a valid JSON format that adheres to the following schema:
 `,
