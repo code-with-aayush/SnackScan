@@ -7,8 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
   createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
 } from 'firebase/auth';
 import { useFirebase } from '@/firebase';
 
@@ -31,7 +29,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { GoogleIcon } from '../icons/google-icon';
 import { useState } from 'react';
 
 const formSchema = z
@@ -81,28 +78,6 @@ export default function SignupForm() {
       setLoading(false);
     }
   }
-
-  async function handleGoogleSignIn() {
-    setLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      toast({
-        title: 'Sign Up Successful',
-        description: 'Welcome to SnackScan!',
-      });
-      router.push('/');
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Google Sign-In Failed',
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
 
   return (
     <Card className="w-full max-w-sm">
@@ -159,20 +134,6 @@ export default function SignupForm() {
             </Button>
           </form>
         </Form>
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
-          <GoogleIcon className="mr-2 h-4 w-4" />
-          Google
-        </Button>
       </CardContent>
       <CardFooter className="text-sm">
         Already have an account?{' '}
