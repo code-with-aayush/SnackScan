@@ -106,16 +106,16 @@ export default function ResultPage() {
           </Link>
         </Button>
         
-        <Card className="w-full">
+        <Card className="w-full animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
             <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
-                    <div className={cn("size-16 mb-4 rounded-full flex items-center justify-center", currentVerdict.style)}>
+                    <div className={cn("size-16 mb-4 rounded-full flex items-center justify-center animate-in zoom-in-50 duration-500", currentVerdict.style)}>
                         <currentVerdict.icon className={cn("size-8", currentVerdict.style.split(' ')[1])} />
                     </div>
-                    <Badge className={cn("mt-2 text-sm px-3 py-1", currentVerdict.style)}>
+                    <Badge className={cn("mt-2 text-sm px-3 py-1 animate-in fade-in-0 delay-150 duration-500", currentVerdict.style)}>
                         {scan.verdict}
                     </Badge>
-                    <h1 className="text-3xl font-bold mt-2">{scan.productName}</h1>
+                    <h1 className="text-3xl font-bold mt-2 animate-in fade-in-0 delay-200 duration-500">{scan.productName}</h1>
                 </div>
                 
                 <div className="mt-8 space-y-6">

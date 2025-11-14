@@ -9,6 +9,7 @@ import type { UserProfile, ScanResult } from '@/lib/types';
 import { assessFoodSafety } from '@/ai/ai-safety-assessment';
 import { useToast } from '@/hooks/use-toast';
 import { ocr } from '@/ai/flows/ocr-flow';
+import { cn } from '@/lib/utils';
 
 function fileToDataUri(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -153,9 +154,10 @@ export default function ScanUploader() {
 
   return (
     <div
-      className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors duration-200 ${
-        dragging ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
-      }`}
+      className={cn(
+        `border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-all duration-300 ease-in-out`,
+        dragging ? 'border-primary bg-primary/10 scale-105' : 'border-border hover:border-primary/50'
+      )}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -170,7 +172,7 @@ export default function ScanUploader() {
         className="hidden"
         onChange={e => handleFileChange(e.target.files ? e.target.files[0] : null)}
       />
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center animate-in fade-in-0 duration-500">
         <UploadCloud className="h-12 w-12 text-muted-foreground" />
         <p className="mt-4 font-semibold">
           Click to upload or drag and drop

@@ -60,7 +60,7 @@ export default function MainNav() {
       {/* Mobile Bottom Nav */}
       <nav 
         className={cn(
-          "md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card border-t z-40 shadow-[0_-1px_4px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out",
+          "md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/80 border-t z-40 shadow-[0_-1px_4px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out backdrop-blur-sm",
           isVisible ? 'translate-y-0' : 'translate-y-full'
         )}
       >

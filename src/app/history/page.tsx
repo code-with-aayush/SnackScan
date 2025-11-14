@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { buttonVariants } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 const verdictConfig = {
@@ -49,7 +50,7 @@ function ScanHistoryCard({ scan, onDelete, onView }: { scan: ScanResult, onDelet
   const currentVerdict = verdictConfig[scan.verdict] || verdictConfig['Moderate'];
   
   return (
-      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50">
+      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50 hover:-translate-y-1">
         <div className="relative p-4">
           <div className="pr-12">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => onView(scan)}>
@@ -95,6 +96,27 @@ function ScanHistoryCard({ scan, onDelete, onView }: { scan: ScanResult, onDelet
       </Card>
   );
 }
+
+const HistorySkeleton = () => (
+    <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+            <div key={i} className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="size-6 rounded-full" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-5 w-32" />
+                            <Skeleton className="h-3 w-20" />
+                        </div>
+                    </div>
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-full mt-4" />
+                <Skeleton className="h-4 w-3/4 mt-2" />
+            </div>
+        ))}
+    </div>
+)
 
 export default function HistoryPage() {
   const { firestore, user } = useFirebase();
@@ -161,11 +183,7 @@ export default function HistoryPage() {
             />
           </div>
           
-          {isLoading && (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          )}
+          {isLoading && <HistorySkeleton />}
 
           {!isLoading && filteredHistory && filteredHistory.length > 0 && (
             <div className="space-y-4">

@@ -11,7 +11,7 @@ import { ShieldCheck, ShieldAlert, CircleAlert, BarChart3 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const StatCard = ({ label, value, icon: Icon, colorClass, loading }: { label: string; value: number; icon: React.ElementType, colorClass?: string, loading?: boolean }) => (
-    <Card className='shadow-sm'>
+    <Card className='shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1'>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{label}</CardTitle>
             <Icon className={cn("size-4 text-muted-foreground", colorClass)} />
