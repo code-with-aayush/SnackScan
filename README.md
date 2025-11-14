@@ -1,4 +1,4 @@
-<h1><b>About SnackScan</b></h1>
+<h1><b>🍏 SnackScan – AI-Powered Food Safety Web App</b></h1>
 <h3><b>About SnackScan</b></h3>
 <br><br>
 SnackScan is an AI-driven web application that helps users instantly determine whether a packaged food product is safe based on their personal health conditions. Built using Gemini, Genkit, Next.js, TypeScript, Tailwind CSS, and Firebase tools, the app blends modern web development with intelligent nutrition analysis.
