@@ -11,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useState, useEffect } from 'react';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
@@ -21,6 +22,33 @@ const navItems = [
 
 export default function MainNav() {
   const pathname = usePathname();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  const controlNavbar = () => {
+    if (typeof window !== 'undefined') {
+      // Show navbar if scrolling up or at the top
+      if (window.scrollY < lastScrollY || window.scrollY <= 10) {
+        setIsVisible(true);
+      } else { // Hide navbar if scrolling down
+        setIsVisible(false);
+      }
+      // remember current scroll position
+      setLastScrollY(window.scrollY);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', controlNavbar);
+
+      // cleanup function
+      return () => {
+        window.removeEventListener('scroll', controlNavbar);
+      };
+    }
+  }, [lastScrollY]);
+
 
   const isRouteActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -30,7 +58,12 @@ export default function MainNav() {
   return (
     <>
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card border-t z-40 shadow-[0_-1px_4px_rgba(0,0,0,0.05)]">
+      <nav 
+        className={cn(
+          "md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card border-t z-40 shadow-[0_-1px_4px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out",
+          isVisible ? 'translate-y-0' : 'translate-y-full'
+        )}
+      >
         <div className="flex justify-around items-center h-full pb-safe">
           {navItems.map(item => (
             <Link
