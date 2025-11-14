@@ -49,54 +49,49 @@ function ScanHistoryCard({ scan, onDelete, onView }: { scan: ScanResult, onDelet
   const currentVerdict = verdictConfig[scan.verdict] || verdictConfig['Moderate'];
   
   return (
-      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50 relative group">
-        <div className="p-4 cursor-pointer" onClick={() => onView(scan)}>
-          <div className="flex justify-between items-start mb-2">
-             <div className="flex-grow">
-                <div className="flex items-center gap-3">
-                <currentVerdict.icon className={cn("size-6", currentVerdict.style.split(' ')[1])} />
-                <div className='flex flex-col'>
-                  <h3 className="font-semibold text-lg leading-tight">{scan.productName}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(scan.scanDate).toLocaleDateString()}
-                  </p>
-                </div>
-                </div>
+      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50">
+        <div className="relative p-4">
+          <div className="pr-12">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => onView(scan)}>
+              <currentVerdict.icon className={cn("size-6", currentVerdict.style.split(' ')[1])} />
+              <div className='flex flex-col'>
+                <h3 className="font-semibold text-lg leading-tight">{scan.productName}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(scan.scanDate).toLocaleDateString()}
+                </p>
+              </div>
             </div>
-            <div className="text-right flex-shrink-0 ml-4">
-               <Badge className={cn("text-xs", currentVerdict.style)}>
-                  {currentVerdict.label}
-                </Badge>
-            </div>
-          </div>
-          
-          <div className='pl-9 mt-2'>
-            <p className="text-sm text-muted-foreground line-clamp-2">
+             <p className="text-sm text-muted-foreground line-clamp-2 mt-2 pl-9 cursor-pointer" onClick={() => onView(scan)}>
                 {scan.analysis.reasoning}
             </p>
           </div>
+          
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <Badge className={cn("text-xs", currentVerdict.style)}>
+              {currentVerdict.label}
+            </Badge>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the scan for
+                    <span className="font-semibold"> {scan.productName}</span>.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(scan.id)} className={cn(buttonVariants({variant: 'destructive'}))}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the scan for
-                <span className="font-semibold"> {scan.productName}</span>.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onDelete(scan.id)} className={cn(buttonVariants({variant: 'destructive'}))}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </Card>
   );
 }
