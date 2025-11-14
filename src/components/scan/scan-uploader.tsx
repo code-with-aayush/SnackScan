@@ -11,14 +11,49 @@ import { useToast } from '@/hooks/use-toast';
 import { ocr } from '@/ai/flows/ocr-flow';
 import { cn } from '@/lib/utils';
 
-function fileToDataUri(file: File): Promise<string> {
+const MAX_IMAGE_DIMENSION = 1280; // Max width or height for the uploaded image
+const IMAGE_QUALITY = 0.7; // JPEG quality from 0 to 1
+
+function resizeImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
+    reader.onload = event => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+
+        if (width > height) {
+          if (width > MAX_IMAGE_DIMENSION) {
+            height = Math.round((height * MAX_IMAGE_DIMENSION) / width);
+            width = MAX_IMAGE_DIMENSION;
+          }
+        } else {
+          if (height > MAX_IMAGE_DIMENSION) {
+            width = Math.round((width * MAX_IMAGE_DIMENSION) / height);
+            height = MAX_IMAGE_DIMENSION;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          return reject(new Error('Could not get canvas context'));
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+
+        resolve(canvas.toDataURL('image/jpeg', IMAGE_QUALITY));
+      };
+      img.onerror = reject;
+      img.src = event.target?.result as string;
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
+
 
 export default function ScanUploader() {
   const [loading, setLoading] = useState(false);
@@ -48,16 +83,19 @@ export default function ScanUploader() {
     setLoading(true);
 
     try {
-      // 1. Convert file to data URI and perform OCR
+      // 1. Resize image and convert to data URI
+      setAnalysisMessage('Preparing image for analysis...');
+      const photoDataUri = await resizeImage(file);
+      
+      // 2. Perform OCR
       setAnalysisMessage('Reading ingredients from image...');
-      const photoDataUri = await fileToDataUri(file);
       const { ingredients, productName, nutritionFacts } = await ocr({ photoDataUri });
 
       if (!ingredients || !productName) {
         throw new Error('AI could not identify the product or its ingredients. Please try another image.');
       }
 
-      // 2. AI Safety Assessment
+      // 3. AI Safety Assessment
       setAnalysisMessage('Assessing product safety with AI...');
       const healthProfileString = `Allergies: ${userProfile.allergies.join(', ') || 'None'}. Conditions: ${userProfile.healthConditions.join(', ') || 'None'}. Preferences: ${userProfile.dietaryPreferences.join(', ') || 'None'}.`;
       
@@ -66,7 +104,7 @@ export default function ScanUploader() {
         healthProfile: healthProfileString,
       });
 
-      // 3. Save to Firestore
+      // 4. Save to Firestore
       setAnalysisMessage('Saving scan results...');
       const scanHistoryRef = collection(firestore, 'users', user.uid, 'scanHistory');
       
@@ -99,7 +137,7 @@ export default function ScanUploader() {
         scannedImage: photoDataUri,
       };
 
-      // 4. Store result in sessionStorage and redirect
+      // 5. Store result in sessionStorage and redirect
       sessionStorage.setItem('latestScanResult', JSON.stringify(finalScanResult));
       setAnalysisMessage('Done!');
       router.push('/result');
