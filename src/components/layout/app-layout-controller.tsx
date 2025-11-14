@@ -31,14 +31,16 @@ function AppShell({ children }: { children: React.ReactNode }) {
   }
   
   return (
-    <div className="min-h-screen w-full bg-secondary/30">
-      <div className="md:pl-16 lg:pl-60">
-        <Header />
-        <main className="bg-background md:m-4 md:rounded-lg md:border md:shadow-sm">
-          {children}
-        </main>
-      </div>
-      <MainNav />
+     <div className="min-h-screen w-full bg-secondary/30">
+        <div className="md:pl-16 lg:pl-60">
+            <Header />
+            {/* Add padding-bottom to the main content area for mobile to avoid overlap with the fixed nav */}
+            <main className="bg-background md:m-4 md:rounded-lg md:border md:shadow-sm pb-24 md:pb-0">
+                {children}
+            </main>
+        </div>
+        {/* MainNav is now a sibling to the content, allowing it to be fixed */}
+        <MainNav />
     </div>
   );
 }
