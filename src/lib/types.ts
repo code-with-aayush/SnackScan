@@ -5,6 +5,7 @@ export interface UserProfile {
   allergies: string[];
   healthConditions: string[];
   dietaryPreferences: string[];
+  theme?: 'light' | 'dark' | 'system';
 }
 
 export interface NutritionFacts {

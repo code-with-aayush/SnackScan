@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import Link from 'next/link';
+import { ThemeToggle } from '../theme-toggle';
 
 const pageTitles: { [key: string]: string } = {
   '/': 'Dashboard',
@@ -86,6 +87,7 @@ export default function Header() {
         </Sheet>
       </div>
       <h1 className="text-xl font-semibold md:text-2xl flex-1">{title}</h1>
+      <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-9 w-9 rounded-full">

@@ -23,8 +23,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/lib/types';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 const dietaryPreferences = [
   { id: 'vegan', label: 'Vegan' },
@@ -44,6 +44,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function ProfileForm() {
   const { user, isUserLoading, auth, firestore } = useFirebase();
+  const { theme } = useTheme();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -107,6 +108,7 @@ export default function ProfileForm() {
       allergies: data.allergies?.split(',').map(s => s.trim()).filter(Boolean) || [],
       healthConditions: data.healthConditions?.split(',').map(s => s.trim()).filter(Boolean) || [],
       dietaryPreferences: data.dietaryPreferences || [],
+      theme: theme as 'light' | 'dark' | 'system',
     };
 
     try {
