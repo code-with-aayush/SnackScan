@@ -3,9 +3,9 @@ import { useMemo } from 'react';
 import AppLayoutController from '@/components/layout/app-layout-controller';
 import DietTips from '@/components/home/diet-tips';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import type { ScanResult } from '@/lib/types';
+import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import type { ScanResult, UserProfile } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ShieldCheck, ShieldAlert, CircleAlert, BarChart3, TrendingUp, Calendar, Zap } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,7 +45,21 @@ export default function DashboardPage() {
   const { data: scanHistory, isLoading } = useCollection<ScanResult>(scanHistoryQuery);
   
   const stats = useMemo(() => {
-    if (!scanHistory) return { total: 0, safe: 0, moderate: 0, notSafe: 0, chartData: [], dailySugar: 0, dailySodium: 0 };
+    const defaultLimits = {
+      sugarLimit: userProfile?.healthGoals?.dailySugarLimit || 50,
+      sodiumLimit: userProfile?.healthGoals?.dailySodiumLimit || 2300
+    };
+
+    if (!scanHistory) return { 
+      total: 0, 
+      safe: 0, 
+      moderate: 0, 
+      notSafe: 0, 
+      chartData: [], 
+      dailySugar: 0, 
+      dailySodium: 0,
+      ...defaultLimits
+    };
     
     const safeCount = scanHistory.filter(s => s.verdict === 'Safe').length;
     const moderateCount = scanHistory.filter(s => s.verdict === 'Moderate').length;
@@ -67,8 +81,7 @@ export default function DashboardPage() {
         }
     });
 
-    const sugarLimit = userProfile?.healthGoals?.dailySugarLimit || 50;
-    const sodiumLimit = userProfile?.healthGoals?.dailySodiumLimit || 2300;
+    const { sugarLimit, sodiumLimit } = defaultLimits;
 
     return {
       total: scanHistory.length,
