@@ -29,7 +29,7 @@ function ThemeSync({ children }: { children: React.ReactNode }) {
   // Effect 2: Save theme to Firestore on change
   React.useEffect(() => {
     const saveTheme = async () => {
-       if (userProfile && theme && userProfile.theme !== theme) {
+       if (profileRef && userProfile && theme && userProfile.theme !== theme) {
          try {
            await setDoc(profileRef, { theme: theme }, { merge: true });
          } catch (error) {
