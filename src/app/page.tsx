@@ -36,6 +36,12 @@ export default function DashboardPage() {
     return collection(firestore, 'users', user.uid, 'scanHistory');
   }, [firestore, user]);
 
+  const profileRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+  const { data: userProfile } = useDoc<UserProfile>(profileRef);
+
   const { data: scanHistory, isLoading } = useCollection<ScanResult>(scanHistoryQuery);
   
   const stats = useMemo(() => {
@@ -61,6 +67,9 @@ export default function DashboardPage() {
         }
     });
 
+    const sugarLimit = userProfile?.healthGoals?.dailySugarLimit || 50;
+    const sodiumLimit = userProfile?.healthGoals?.dailySodiumLimit || 2300;
+
     return {
       total: scanHistory.length,
       safe: safeCount,
@@ -68,13 +77,15 @@ export default function DashboardPage() {
       notSafe: notSafeCount,
       dailySugar: totalSugar,
       dailySodium: totalSodium,
+      sugarLimit,
+      sodiumLimit,
       chartData: [
         { name: 'Safe', value: safeCount, color: '#2DBE72' },
         { name: 'Moderate', value: moderateCount, color: '#F59E0B' },
         { name: 'Not Safe', value: notSafeCount, color: '#EF4444' },
       ]
     };
-  }, [scanHistory]);
+  }, [scanHistory, userProfile]);
 
   const COLORS = ['#2DBE72', '#F59E0B', '#EF4444'];
 
@@ -145,19 +156,19 @@ export default function DashboardPage() {
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span>Sugar Intake</span>
-                                <span className="font-medium">{stats.dailySugar}g / 50g</span>
+                                <span className="font-medium">{stats.dailySugar}g / {stats.sugarLimit}g</span>
                             </div>
-                            <Progress value={(stats.dailySugar / 50) * 100} className="h-2" />
+                            <Progress value={(stats.dailySugar / stats.sugarLimit) * 100} className="h-2" />
                         </div>
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span>Sodium Intake</span>
-                                <span className="font-medium">{stats.dailySodium}mg / 2300mg</span>
+                                <span className="font-medium">{stats.dailySodium}mg / {stats.sodiumLimit}mg</span>
                             </div>
-                            <Progress value={(stats.dailySodium / 2300) * 100} className="h-2" />
+                            <Progress value={(stats.dailySodium / stats.sodiumLimit) * 100} className="h-2" />
                         </div>
                         <p className="text-xs text-muted-foreground italic">
-                            *Limits based on general health guidelines.
+                            *Limits customized based on your profile.
                         </p>
                     </CardContent>
                 </Card>

@@ -5,6 +5,11 @@ export interface UserProfile {
   allergies: string[];
   healthConditions: string[];
   dietaryPreferences: string[];
+  dietaryPersona?: 'balanced' | 'fitness' | 'medical' | 'eco';
+  healthGoals?: {
+    dailySugarLimit: number;
+    dailySodiumLimit: number;
+  };
   theme?: 'light' | 'dark' | 'system';
 }
 

@@ -23,8 +23,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/lib/types';
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, Heart, Settings, LogOut, Target, Sparkles } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const dietaryPreferences = [
   { id: 'vegan', label: 'Vegan' },
@@ -33,11 +37,21 @@ const dietaryPreferences = [
   { id: 'dairy-free', label: 'Dairy-Free' },
 ] as const;
 
+const personas = [
+  { id: 'balanced', label: 'Balanced', description: 'General healthy eating', icon: '🥗' },
+  { id: 'fitness', label: 'Fitness', description: 'High protein, low carb', icon: '💪' },
+  { id: 'medical', label: 'Medical Focus', description: 'Strict allergy & limit monitoring', icon: '🏥' },
+  { id: 'eco', label: 'Eco-Conscious', description: 'Plant-based & sustainable', icon: '🌍' },
+] as const;
+
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   allergies: z.string().optional(),
   healthConditions: z.string().optional(),
   dietaryPreferences: z.array(z.string()).optional(),
+  dietaryPersona: z.enum(['balanced', 'fitness', 'medical', 'eco']).optional(),
+  dailySugarLimit: z.coerce.number().min(0),
+  dailySodiumLimit: z.coerce.number().min(0),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -47,7 +61,6 @@ export default function ProfileForm() {
   const { theme } = useTheme();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-
 
   const profileRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -69,6 +82,9 @@ export default function ProfileForm() {
       allergies: '',
       healthConditions: '',
       dietaryPreferences: [],
+      dietaryPersona: 'balanced',
+      dailySugarLimit: 50,
+      dailySodiumLimit: 2300,
     },
   });
 
@@ -79,27 +95,15 @@ export default function ProfileForm() {
         allergies: (userProfile.allergies || []).join(', '),
         healthConditions: (userProfile.healthConditions || []).join(', '),
         dietaryPreferences: userProfile.dietaryPreferences || [],
-      });
-    } else if (user) {
-       form.reset({
-        name: user.displayName || '',
-        allergies: '',
-        healthConditions: '',
-        dietaryPreferences: [],
+        dietaryPersona: userProfile.dietaryPersona || 'balanced',
+        dailySugarLimit: userProfile.healthGoals?.dailySugarLimit ?? 50,
+        dailySodiumLimit: userProfile.healthGoals?.dailySodiumLimit ?? 2300,
       });
     }
   }, [userProfile, user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
-    if (!profileRef || !user) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'You must be logged in to update your profile.',
-      });
-      return;
-    }
-    
+    if (!profileRef || !user) return;
     setIsSaving(true);
     
     const profileData: Partial<UserProfile> = {
@@ -108,21 +112,19 @@ export default function ProfileForm() {
       allergies: data.allergies?.split(',').map(s => s.trim()).filter(Boolean) || [],
       healthConditions: data.healthConditions?.split(',').map(s => s.trim()).filter(Boolean) || [],
       dietaryPreferences: data.dietaryPreferences || [],
+      dietaryPersona: data.dietaryPersona,
+      healthGoals: {
+        dailySugarLimit: data.dailySugarLimit,
+        dailySodiumLimit: data.dailySodiumLimit,
+      },
       theme: theme as 'light' | 'dark' | 'system',
     };
 
     try {
         await setDoc(profileRef, profileData, { merge: true });
-        toast({
-          title: 'Profile Saved',
-          description: 'Your health profile has been updated.',
-        });
+        toast({ title: 'Profile Updated', description: 'Your settings have been synced successfully.' });
     } catch(e: any) {
-         toast({
-            variant: 'destructive',
-            title: 'Uh oh! Something went wrong.',
-            description: e.message || "Could not save your profile.",
-        });
+         toast({ variant: 'destructive', title: 'Save Failed', description: e.message });
     } finally {
         setIsSaving(false);
     }
@@ -131,120 +133,172 @@ export default function ProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Name</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="allergies"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Allergies</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="e.g., Peanuts, Shellfish, Soy"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                List any food allergies, separated by commas.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="healthConditions"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Health Conditions</FormLabel>              
-              <FormControl>
-                <Textarea
-                  placeholder="e.g., Diabetes, High Blood Pressure"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                List any relevant health conditions, separated by commas.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="dietaryPreferences"
-          render={() => (
-            <FormItem>
-              <div className="mb-4">
-                <FormLabel className="text-base">Dietary Preferences</FormLabel>
-                <FormDescription>
-                  Select any dietary preferences that apply.
-                </FormDescription>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-              {dietaryPreferences.map(item => (
-                <FormField
-                  key={item.id}
-                  control={form.control}
-                  name="dietaryPreferences"
-                  render={({ field }) => {
-                    return (
-                      <FormItem
-                        key={item.id}
-                        className="flex flex-row items-start space-x-3 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(item.id)}
-                            onCheckedChange={checked => {
-                              return checked
-                                ? field.onChange([...(field.value || []), item.id])
-                                : field.onChange(
-                                    field.value?.filter(
-                                      value => value !== item.id
-                                    )
-                                  );
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          {item.label}
-                        </FormLabel>
-                      </FormItem>
-                    );
-                  }}
-                />
-              ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <Tabs defaultValue="account" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="account" className="flex items-center gap-2">
+              <User className="size-4" /> <span className="hidden sm:inline">Account</span>
+            </TabsTrigger>
+            <TabsTrigger value="health" className="flex items-center gap-2">
+              <Heart className="size-4" /> <span className="hidden sm:inline">Health</span>
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="flex items-center gap-2">
+              <Target className="size-4" /> <span className="hidden sm:inline">Goals</span>
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="flex flex-wrap gap-4 pt-4">
-           <Button type="submit" disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
+          <TabsContent value="account" className="space-y-6">
+            <Card className="border-none bg-muted/30 shadow-none">
+              <CardContent className="pt-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <FormLabel className="text-base flex items-center gap-2">
+                <Sparkles className="size-4 text-primary" />
+                Select Your Dietary Persona
+              </FormLabel>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {personas.map((persona) => (
+                  <motion.div
+                    key={persona.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <label
+                      className={cn(
+                        "flex flex-col p-4 border rounded-xl cursor-pointer transition-all duration-200",
+                        form.watch('dietaryPersona') === persona.id 
+                          ? "border-primary bg-primary/10 ring-2 ring-primary/20" 
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        className="hidden"
+                        {...form.register('dietaryPersona')}
+                        value={persona.id}
+                      />
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-2xl">{persona.icon}</span>
+                        <span className="font-bold">{persona.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{persona.description}</p>
+                    </label>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="health" className="space-y-6">
+            <div className="grid gap-6">
+              <FormField
+                control={form.control}
+                name="allergies"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Known Allergies</FormLabel>
+                    <FormControl><Textarea placeholder="e.g., Peanuts, Soy, Shellfish" {...field} /></FormControl>
+                    <FormDescription>The AI will use this to flag ingredients.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="healthConditions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Health Conditions</FormLabel>              
+                    <FormControl><Textarea placeholder="e.g., Type 2 Diabetes, Hypertension" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="dietaryPreferences"
+                render={() => (
+                  <FormItem>
+                    <FormLabel className="text-base">Quick Restrictions</FormLabel>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      {dietaryPreferences.map(item => (
+                        <FormField
+                          key={item.id}
+                          control={form.control}
+                          name="dietaryPreferences"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(item.id)}
+                                  onCheckedChange={checked => {
+                                    return checked
+                                      ? field.onChange([...(field.value || []), item.id])
+                                      : field.onChange(field.value?.filter(v => v !== item.id));
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">{item.label}</FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="goals" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="dailySugarLimit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Daily Sugar Limit (g)</FormLabel>
+                    <FormControl><Input type="number" {...field} /></FormControl>
+                    <FormDescription>WHO recommends &lt; 50g/day.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="dailySodiumLimit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Daily Sodium Limit (mg)</FormLabel>
+                    <FormControl><Input type="number" {...field} /></FormControl>
+                    <FormDescription>CDC recommends &lt; 2,300mg/day.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+          <Button type="submit" className="flex-1" disabled={isSaving}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Settings className="mr-2 h-4 w-4" />}
+            Save Health Profile
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={signOut}
-            disabled={isUserLoading}
-          >
-            Log Out
+          <Button type="button" variant="outline" onClick={signOut} disabled={isUserLoading}>
+            <LogOut className="mr-2 h-4 w-4" /> Log Out
           </Button>
         </div>
       </form>
