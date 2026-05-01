@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UploadCloud, Loader2 } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, addDoc, collection } from 'firebase/firestore';
+import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import type { UserProfile, ScanResult } from '@/lib/types';
 import { assessFoodSafety } from '@/ai/ai-safety-assessment';
 import { useToast } from '@/hooks/use-toast';
@@ -114,10 +114,11 @@ export default function ScanUploader() {
       if (productName.toLowerCase().includes('chocolate')) imageId = 'chocolate';
 
 
-      const newScanData: Omit<ScanResult, 'id'> = {
+      const newScanData = {
         userId: user.uid,
         productName: productName,
         scanDate: new Date().toISOString(),
+        timestamp: serverTimestamp(),
         verdict: assessment.verdict,
         imageId,
         analysis: {

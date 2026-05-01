@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ScanLine, UserCircle, History, Salad, Home } from 'lucide-react';
+import { ScanLine, UserCircle, History, Salad, Home, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -16,6 +16,7 @@ import { useState, useEffect } from 'react';
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/scan', icon: ScanLine, label: 'Scan' },
+  { href: '/compare', icon: Scale, label: 'Compare' },
   { href: '/history', icon: History, label: 'History' },
   { href: '/profile', icon: UserCircle, label: 'Profile' },
 ];

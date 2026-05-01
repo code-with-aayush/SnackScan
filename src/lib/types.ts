@@ -24,6 +24,7 @@ export interface ScanResult {
   productName: string;
   verdict: 'Safe' | 'Not Safe' | 'Moderate';
   scanDate: string;
+  timestamp: any; // Firestore Timestamp
   imageId: string;
   scannedImage?: string;
   analysis: {
